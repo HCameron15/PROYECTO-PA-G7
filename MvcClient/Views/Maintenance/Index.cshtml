@@ -1,0 +1,299 @@
+@{
+    ViewData["Title"] = "Mantenimiento de Estudiantes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0" style="color:#1a73e8; font-weight:700;">
+        <i class="fas fa-user-graduate mr-2"></i> Mantenimiento de Estudiantes
+    </h4>
+    <button type="button" class="btn btn-nuevo" id="btnNuevo">
+        <i class="fas fa-plus mr-1"></i> Nuevo Estudiante
+    </button>
+</div>
+
+<div class="card card-mantenimiento">
+    <div class="card-header d-flex align-items-center">
+        <h3 class="card-title mb-0">
+            <i class="fas fa-list mr-2"></i> Listado
+            <span class="badge-count ml-2" id="totalEstudiantes">0</span>
+        </h3>
+    </div>
+    <div class="card-body p-0">
+        <div id="loadingSpinner" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted small">Cargando estudiantes...</p>
+        </div>
+        <div class="table-responsive" id="tablaWrapper" style="display:none;">
+            <table class="table table-hover mb-0" id="tablaEstudiantes">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width:60px;">ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Correo</th>
+                        <th>Fecha Nacimiento</th>
+                        <th class="text-center" style="width:100px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* Modal formulario *@
+<div class="modal fade" id="modalEstudiante" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    <span id="modalTitulo">Nuevo Estudiante</span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <input type="hidden" id="idInput" />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-600">Nombre</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                </div>
+                                <input type="text" class="form-control" id="firstNameInput" placeholder="Ingrese el nombre" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-600">Apellido</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                </div>
+                                <input type="text" class="form-control" id="lastNameInput" placeholder="Ingrese el apellido" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="font-weight-600">Correo electrónico</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        </div>
+                        <input type="email" class="form-control" id="emailInput" placeholder="correo@ejemplo.com" />
+                    </div>
+                </div>
+                <div class="form-group mb-0">
+                    <label class="font-weight-600">Fecha de nacimiento</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="date" class="form-control" id="birthDateInput" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardar">
+                    <i class="fas fa-save mr-1"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal confirmación eliminar *@
+<div class="modal fade" id="modalConfirmar" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Confirmar
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-trash-alt icono-advertencia mb-3 d-block"></i>
+                <p class="font-weight-bold mb-1">¿Eliminar estudiante?</p>
+                <p class="text-muted small" id="mensajeEliminar">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer justify-content-center bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnConfirmarEliminar">
+                    <i class="fas fa-trash mr-1"></i> Sí, eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const endpoints = {
+            get: '/Maintenance/GetStudents',
+            create: '/Maintenance/CreateStudent',
+            update: (id) => `/Maintenance/UpdateStudent?id=${id}`,
+            delete: (id) => `/Maintenance/DeleteStudent?id=${id}`
+        };
+
+        let estudiantes = [];
+        let idPendienteEliminar = null;
+
+        function formatFecha(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        }
+
+        function cargarEstudiantes() {
+            $('#loadingSpinner').show();
+            $('#tablaWrapper').hide();
+            $.ajax({
+                url: endpoints.get,
+                type: 'GET',
+                success: function (data) {
+                    estudiantes = data;
+                    renderTabla();
+                    $('#loadingSpinner').hide();
+                    $('#tablaWrapper').show();
+                },
+                error: function () {
+                    toastr.error('No fue posible cargar los estudiantes.', 'Error');
+                    $('#loadingSpinner').hide();
+                }
+            });
+        }
+
+        function renderTabla() {
+            const tbody = $('#tablaEstudiantes tbody');
+            tbody.empty();
+            if (!estudiantes || estudiantes.length === 0) {
+                tbody.append('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No hay estudiantes registrados.</td></tr>');
+                $('#totalEstudiantes').text('0');
+                return;
+            }
+            $.each(estudiantes, function (i, e) {
+                tbody.append(`<tr>
+                    <td class="text-center">${e.id}</td>
+                    <td>${e.firstName}</td>
+                    <td>${e.lastName}</td>
+                    <td>${e.email}</td>
+                    <td>${formatFecha(e.birthDate)}</td>
+                    <td class="text-center acciones-col">
+                        <button class="btn btn-accion btn-outline-primary mr-1 btn-editar" data-id="${e.id}" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-accion btn-outline-danger btn-eliminar" data-id="${e.id}" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`);
+            });
+            $('#totalEstudiantes').text(estudiantes.length);
+        }
+
+        function limpiarFormulario() {
+            $('#idInput').val('');
+            $('#firstNameInput, #lastNameInput, #emailInput, #birthDateInput').val('');
+            $('#modalTitulo').text('Nuevo Estudiante');
+            $('#btnGuardar').html('<i class="fas fa-save mr-1"></i> Guardar');
+        }
+
+        function editar(id) {
+            const e = estudiantes.find(s => s.id === id);
+            if (!e) return;
+            $('#idInput').val(e.id);
+            $('#firstNameInput').val(e.firstName);
+            $('#lastNameInput').val(e.lastName);
+            $('#emailInput').val(e.email);
+            if (e.birthDate) {
+                const d = new Date(e.birthDate);
+                $('#birthDateInput').val(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+            }
+            $('#modalTitulo').text('Editar Estudiante');
+            $('#btnGuardar').html('<i class="fas fa-save mr-1"></i> Actualizar');
+            $('#modalEstudiante').modal('show');
+        }
+
+        function confirmarEliminar(id) {
+            idPendienteEliminar = id;
+            const e = estudiantes.find(s => s.id === id);
+            $('#mensajeEliminar').text(e ? `Se eliminará a "${e.firstName} ${e.lastName}". Esta acción no se puede deshacer.` : 'Esta acción no se puede deshacer.');
+            $('#modalConfirmar').modal('show');
+        }
+
+        async function eliminar() {
+            if (idPendienteEliminar === null) return;
+            $('#modalConfirmar').modal('hide');
+            try {
+                const r = await fetch(endpoints.delete(idPendienteEliminar), { method: 'DELETE' });
+                if (!r.ok) { toastr.error('No fue posible eliminar el estudiante.', 'Error'); return; }
+                toastr.success('Estudiante eliminado correctamente.', 'Éxito');
+                cargarEstudiantes();
+            } catch {
+                toastr.error('Error de conexión con el servidor.', 'Error');
+            } finally {
+                idPendienteEliminar = null;
+            }
+        }
+
+        async function guardar() {
+            const id = $('#idInput').val();
+            const firstName = $('#firstNameInput').val().trim();
+            const lastName  = $('#lastNameInput').val().trim();
+            const email     = $('#emailInput').val().trim();
+            const birthDate = $('#birthDateInput').val();
+
+            if (!firstName || !lastName || !email || !birthDate) {
+                toastr.warning('Por favor completá todos los campos.', 'Atención');
+                return;
+            }
+
+            try {
+                const r = await fetch(id ? endpoints.update(id) : endpoints.create, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ firstName, lastName, email, birthDate })
+                });
+                if (!r.ok) {
+                    const d = await r.json().catch(() => null);
+                    toastr.error(d?.message ?? 'No fue posible guardar.', 'Error');
+                    return;
+                }
+                $('#modalEstudiante').modal('hide');
+                toastr.success(id ? 'Estudiante actualizado correctamente.' : 'Estudiante creado correctamente.', 'Éxito');
+                cargarEstudiantes();
+            } catch {
+                toastr.error('Error de conexión con el servidor.', 'Error');
+            }
+        }
+
+        $(document).ready(function () {
+            cargarEstudiantes();
+
+            $('#btnNuevo').on('click', function () {
+                limpiarFormulario();
+                $('#modalEstudiante').modal('show');
+            });
+
+            $(document).on('click', '.btn-editar', function () { editar(parseInt($(this).data('id'))); });
+            $(document).on('click', '.btn-eliminar', function () { confirmarEliminar(parseInt($(this).data('id'))); });
+
+            $('#btnGuardar').on('click', guardar);
+            $('#btnConfirmarEliminar').on('click', eliminar);
+        });
+    })();
+</script>
+}

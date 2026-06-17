@@ -1,0 +1,295 @@
+﻿@{
+    ViewData["Title"] = "Mantenimiento de Usuarios";
+}
+
+<h3 class="mb-3">
+    <i class="fas fa-users"></i> Mantenimiento de Usuarios
+</h3>
+
+<button class="btn btn-primary mb-3" id="btnNuevo">
+    Nuevo Usuario
+</button>
+
+<table class="table table-bordered" id="tablaUsuarios">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Rol</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Email</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div class="modal fade" id="modalUsuario">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">Usuario</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="idInput" />
+
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select class="form-control" id="roleIdInput"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input class="form-control" id="firstNameInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Apellido</label>
+                    <input class="form-control" id="lastNameInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-control" id="emailInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="passwordInput" />
+                    <small class="text-muted">En edición puede dejarse vacío para mantener la contraseña actual.</small>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleUsuario">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white">Detalle del Usuario</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="detalleId"></span></p>
+                <p><strong>Rol:</strong> <span id="detalleRoleName"></span></p>
+                <p><strong>Nombre:</strong> <span id="detalleFirstName"></span></p>
+                <p><strong>Apellido:</strong> <span id="detalleLastName"></span></p>
+                <p><strong>Email:</strong> <span id="detalleEmail"></span></p>
+                <p><strong>Estado:</strong> <span id="detalleIsActive"></span></p>
+                <p class="text-muted mb-0">
+                    PasswordHash no se muestra en el frontend ni en la respuesta del API.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        let usuarios = [];
+
+        const endpoints = {
+            getUsers: '/Users/GetUsers',
+            getRoles: '/Users/GetRoles',
+            create: '/Users/CreateUser',
+            update: (id) => `/Users/UpdateUser?id=${id}`,
+            delete: (id) => `/Users/DeleteUser?id=${id}`
+        };
+
+        function cargarUsuarios() {
+            $.get(endpoints.getUsers, function(data) {
+                usuarios = data;
+
+                let tbody = $('#tablaUsuarios tbody');
+                tbody.empty();
+
+                if (!data || data.length === 0) {
+                    tbody.append('<tr><td colspan="7" class="text-center text-muted">No hay usuarios registrados.</td></tr>');
+                    return;
+                }
+
+                data.forEach(u => {
+                    tbody.append(`
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.roleName}</td>
+                            <td>${u.firstName}</td>
+                            <td>${u.lastName}</td>
+                            <td>${u.email}</td>
+                            <td>${u.isActive ? 'Activo' : 'Inactivo'}</td>
+                            <td>
+                                <button class="btn btn-info btnDetalle" data-id="${u.id}">
+                                    Ver
+                                </button>
+
+                                <button class="btn btn-warning btnEditar" data-id="${u.id}">
+                                    Editar
+                                </button>
+
+                                <button class="btn btn-danger btnEliminar" data-id="${u.id}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            }).fail(function () {
+                toastr.error('No fue posible cargar los usuarios.');
+            });
+        }
+
+        function cargarRoles(callback) {
+            $.get(endpoints.getRoles, function(data) {
+                let combo = $('#roleIdInput');
+                combo.empty();
+
+                data.forEach(r => {
+                    combo.append(
+                        `<option value="${r.id}">
+                            ${r.name}
+                        </option>`
+                    );
+                });
+
+                if (callback) callback();
+
+            }).fail(function () {
+                toastr.error('No fue posible cargar los roles.');
+            });
+        }
+
+        $('#btnNuevo').click(function() {
+            $('#idInput').val('');
+            $('#firstNameInput').val('');
+            $('#lastNameInput').val('');
+            $('#emailInput').val('');
+            $('#passwordInput').val('');
+
+            cargarRoles();
+
+            $('#modalUsuario').modal('show');
+        });
+
+        $('#btnGuardar').click(async function() {
+            const id = $('#idInput').val();
+
+            const payload = {
+                roleId: parseInt($('#roleIdInput').val()),
+                firstName: $('#firstNameInput').val(),
+                lastName: $('#lastNameInput').val(),
+                email: $('#emailInput').val(),
+                password: $('#passwordInput').val()
+            };
+
+            const response = await fetch(
+                id ? endpoints.update(id) : endpoints.create,
+                {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type':'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+            if(response.ok) {
+                $('#modalUsuario').modal('hide');
+                toastr.success('Usuario guardado.');
+                cargarUsuarios();
+            }
+            else {
+                const error = await response.json().catch(() => null);
+                toastr.error(error?.message ?? 'No fue posible guardar.');
+            }
+        });
+
+        $(document).on('click', '.btnDetalle', function () {
+            const id = $(this).data('id');
+            const usuario = usuarios.find(u => u.id === id);
+
+            if (!usuario) {
+                toastr.error('Usuario no encontrado.');
+                return;
+            }
+
+            $('#detalleId').text(usuario.id);
+            $('#detalleRoleName').text(usuario.roleName);
+            $('#detalleFirstName').text(usuario.firstName);
+            $('#detalleLastName').text(usuario.lastName);
+            $('#detalleEmail').text(usuario.email);
+            $('#detalleIsActive').text(usuario.isActive ? 'Activo' : 'Inactivo');
+
+            $('#modalDetalleUsuario').modal('show');
+        });
+
+        $(document).on('click', '.btnEliminar', async function() {
+            const id = $(this).data('id');
+
+            if (!confirm('¿Desea eliminar este usuario?')) return;
+
+            const response = await fetch(
+                endpoints.delete(id),
+                {
+                    method:'DELETE'
+                });
+
+            if(response.ok) {
+                toastr.success('Usuario eliminado.');
+                cargarUsuarios();
+            }
+            else {
+                toastr.error('No fue posible eliminar el usuario.');
+            }
+        });
+
+        $(document).on('click', '.btnEditar', function () {
+            const id = $(this).data('id');
+            const usuario = usuarios.find(u => u.id === id);
+
+            if (!usuario) {
+                toastr.error('Usuario no encontrado.');
+                return;
+            }
+
+            cargarRoles(function () {
+                $('#roleIdInput').val(usuario.roleId);
+            });
+
+            $('#idInput').val(usuario.id);
+            $('#firstNameInput').val(usuario.firstName);
+            $('#lastNameInput').val(usuario.lastName);
+            $('#emailInput').val(usuario.email);
+            $('#passwordInput').val('');
+
+            $('#modalUsuario').modal('show');
+        });
+
+        $(document).ready(function() {
+            cargarUsuarios();
+        });
+    </script>
+}

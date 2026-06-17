@@ -1,0 +1,23 @@
+# Build
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Secrets / env
+**/appsettings.Development.json
+**/*.pfx
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Markdown e IA
+*.md
+.claude/
+
+# Rider / JetBrains
+.idea/

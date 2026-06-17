@@ -1,0 +1,308 @@
+﻿@{
+    ViewData["Title"] = "Mantenimiento de Equipos";
+}
+
+<h3 class="mb-3">
+    <i class="fas fa-desktop"></i> Mantenimiento de Equipos
+</h3>
+
+<button class="btn btn-primary mb-3" id="btnNuevo">
+    Nuevo Equipo
+</button>
+
+<table class="table table-bordered" id="tablaEquipos">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Laboratorio</th>
+            <th>Código</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Serie</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div class="modal fade" id="modalEquipo">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title">Equipo</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="idInput" />
+
+                <div class="form-group">
+                    <label>Laboratorio</label>
+                    <select class="form-control" id="laboratoryIdInput"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Código</label>
+                    <input class="form-control" id="codeInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input class="form-control" id="brandInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input class="form-control" id="modelInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Número de serie</label>
+                    <input class="form-control" id="serialNumberInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <input class="form-control" id="typeInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Estado</label>
+                    <input class="form-control" id="statusInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha de compra</label>
+                    <input type="date" class="form-control" id="purchaseDateInput" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleEquipo">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white">Detalle del Equipo</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="detalleId"></span></p>
+                <p><strong>Laboratorio:</strong> <span id="detalleLaboratorio"></span></p>
+                <p><strong>Código:</strong> <span id="detalleCode"></span></p>
+                <p><strong>Marca:</strong> <span id="detalleBrand"></span></p>
+                <p><strong>Modelo:</strong> <span id="detalleModel"></span></p>
+                <p><strong>Serie:</strong> <span id="detalleSerial"></span></p>
+                <p><strong>Tipo:</strong> <span id="detalleType"></span></p>
+                <p><strong>Estado:</strong> <span id="detalleStatus"></span></p>
+                <p><strong>Fecha compra:</strong> <span id="detallePurchaseDate"></span></p>
+                <p><strong>Activo:</strong> <span id="detalleIsActive"></span></p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let equipos = [];
+
+        const endpoints = {
+            get: '/Equipment/GetEquipment',
+            getLabs: '/Equipment/GetLaboratories',
+            create: '/Equipment/CreateEquipment',
+            update: (id) => `/Equipment/UpdateEquipment?id=${id}`,
+            delete: (id) => `/Equipment/DeleteEquipment?id=${id}`
+        };
+
+        function cargarEquipos() {
+            $.get(endpoints.get, function(data) {
+                equipos = data;
+                const tbody = $('#tablaEquipos tbody');
+                tbody.empty();
+
+                if (!data || data.length === 0) {
+                    tbody.append('<tr><td colspan="10" class="text-center text-muted">No hay equipos registrados.</td></tr>');
+                    return;
+                }
+
+                data.forEach(e => {
+                    tbody.append(`
+                        <tr>
+                            <td>${e.id}</td>
+                            <td>${e.laboratoryName}</td>
+                            <td>${e.code}</td>
+                            <td>${e.brand}</td>
+                            <td>${e.model}</td>
+                            <td>${e.serialNumber}</td>
+                            <td>${e.type}</td>
+                            <td>${e.status}</td>
+                            <td>${e.isActive ? 'Activo' : 'Inactivo'}</td>
+                            <td>
+                                <button class="btn btn-info btnDetalle" data-id="${e.id}">Ver</button>
+                                <button class="btn btn-warning btnEditar" data-id="${e.id}">Editar</button>
+                                <button class="btn btn-danger btnEliminar" data-id="${e.id}">Eliminar</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            }).fail(function () {
+                toastr.error('No fue posible cargar los equipos.');
+            });
+        }
+
+        function cargarLaboratorios(callback) {
+            $.get(endpoints.getLabs, function(data) {
+                const combo = $('#laboratoryIdInput');
+                combo.empty();
+
+                data.forEach(l => {
+                    combo.append(`<option value="${l.id}">${l.name}</option>`);
+                });
+
+                if (callback) callback();
+            }).fail(function () {
+                toastr.error('No fue posible cargar los laboratorios.');
+            });
+        }
+
+        $('#btnNuevo').click(function() {
+            $('#idInput').val('');
+            $('#codeInput').val('');
+            $('#brandInput').val('');
+            $('#modelInput').val('');
+            $('#serialNumberInput').val('');
+            $('#typeInput').val('');
+            $('#statusInput').val('');
+            $('#purchaseDateInput').val('');
+
+            cargarLaboratorios();
+
+            $('#modalEquipo').modal('show');
+        });
+
+        $(document).on('click', '.btnDetalle', function() {
+            const id = $(this).data('id');
+            const equipo = equipos.find(e => e.id === id);
+
+            if (!equipo) {
+                toastr.error('Equipo no encontrado.');
+                return;
+            }
+
+            $('#detalleId').text(equipo.id);
+            $('#detalleLaboratorio').text(equipo.laboratoryName);
+            $('#detalleCode').text(equipo.code);
+            $('#detalleBrand').text(equipo.brand);
+            $('#detalleModel').text(equipo.model);
+            $('#detalleSerial').text(equipo.serialNumber);
+            $('#detalleType').text(equipo.type);
+            $('#detalleStatus').text(equipo.status);
+            $('#detallePurchaseDate').text(equipo.purchaseDate ?? 'Sin fecha');
+            $('#detalleIsActive').text(equipo.isActive ? 'Activo' : 'Inactivo');
+
+            $('#modalDetalleEquipo').modal('show');
+        });
+
+        $(document).on('click', '.btnEditar', function() {
+            const id = $(this).data('id');
+            const equipo = equipos.find(e => e.id === id);
+
+            if (!equipo) {
+                toastr.error('Equipo no encontrado.');
+                return;
+            }
+
+            cargarLaboratorios(function () {
+                $('#laboratoryIdInput').val(equipo.laboratoryId);
+            });
+
+            $('#idInput').val(equipo.id);
+            $('#codeInput').val(equipo.code);
+            $('#brandInput').val(equipo.brand);
+            $('#modelInput').val(equipo.model);
+            $('#serialNumberInput').val(equipo.serialNumber);
+            $('#typeInput').val(equipo.type);
+            $('#statusInput').val(equipo.status);
+
+            if (equipo.purchaseDate) {
+                $('#purchaseDateInput').val(equipo.purchaseDate.substring(0, 10));
+            } else {
+                $('#purchaseDateInput').val('');
+            }
+
+            $('#modalEquipo').modal('show');
+        });
+
+        $('#btnGuardar').click(async function() {
+            const id = $('#idInput').val();
+
+            const payload = {
+                laboratoryId: parseInt($('#laboratoryIdInput').val()),
+                code: $('#codeInput').val(),
+                brand: $('#brandInput').val(),
+                model: $('#modelInput').val(),
+                serialNumber: $('#serialNumberInput').val(),
+                type: $('#typeInput').val(),
+                status: $('#statusInput').val(),
+                purchaseDate: $('#purchaseDateInput').val() || null
+            };
+
+            const response = await fetch(id ? endpoints.update(id) : endpoints.create, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                $('#modalEquipo').modal('hide');
+                toastr.success('Equipo guardado.');
+                cargarEquipos();
+            } else {
+                toastr.error('No fue posible guardar.');
+            }
+        });
+
+        $(document).on('click', '.btnEliminar', async function() {
+            const id = $(this).data('id');
+
+            if (!confirm('¿Desea eliminar este equipo?')) return;
+
+            const response = await fetch(endpoints.delete(id), {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toastr.success('Equipo eliminado.');
+                cargarEquipos();
+            } else {
+                toastr.error('No fue posible eliminar.');
+            }
+        });
+
+        $(document).ready(function() {
+            cargarEquipos();
+        });
+    </script>
+}

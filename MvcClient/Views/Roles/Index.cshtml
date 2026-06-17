@@ -1,0 +1,246 @@
+﻿@{
+    ViewData["Title"] = "Mantenimiento de Roles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0" style="color:#1a73e8; font-weight:700;">
+        <i class="fas fa-user-shield mr-2"></i> Mantenimiento de Roles
+    </h4>
+    <button type="button" class="btn btn-primary" id="btnNuevo">
+        <i class="fas fa-plus mr-1"></i> Nuevo Rol
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            Listado <span class="badge badge-primary" id="totalRoles">0</span>
+        </h3>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0" id="tablaRoles">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Activo</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRol" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white" id="modalTitulo">Nuevo Rol</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="idInput" />
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" class="form-control" id="nameInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea class="form-control" id="descriptionInput"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleRol" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white">Detalle del Rol</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="detalleId"></span></p>
+                <p><strong>Nombre:</strong> <span id="detalleName"></span></p>
+                <p><strong>Descripción:</strong> <span id="detalleDescription"></span></p>
+                <p><strong>Estado:</strong> <span id="detalleIsActive"></span></p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const endpoints = {
+            get: '/Roles/GetRoles',
+            create: '/Roles/CreateRole',
+            update: (id) => `/Roles/UpdateRole?id=${id}`,
+            delete: (id) => `/Roles/DeleteRole?id=${id}`
+        };
+
+        let roles = [];
+
+        function cargarRoles() {
+            $.get(endpoints.get, function (data) {
+                roles = data;
+                renderTabla();
+            }).fail(function () {
+                toastr.error('No fue posible cargar los roles.');
+            });
+        }
+
+        function renderTabla() {
+            const tbody = $('#tablaRoles tbody');
+            tbody.empty();
+
+            $('#totalRoles').text(roles.length);
+
+            if (roles.length === 0) {
+                tbody.append('<tr><td colspan="5" class="text-center text-muted">No hay roles registrados.</td></tr>');
+                return;
+            }
+
+            roles.forEach(r => {
+                tbody.append(`
+                    <tr>
+                        <td>${r.id}</td>
+                        <td>${r.name}</td>
+                        <td>${r.description ?? ''}</td>
+                        <td>${r.isActive ? 'Activo' : 'Inactivo'}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-info btn-detalle" data-id="${r.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${r.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${r.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function limpiarFormulario() {
+            $('#idInput').val('');
+            $('#nameInput').val('');
+            $('#descriptionInput').val('');
+            $('#modalTitulo').text('Nuevo Rol');
+        }
+
+        function detalle(id) {
+            const r = roles.find(x => x.id === id);
+
+            if (!r) {
+                toastr.error('Rol no encontrado.');
+                return;
+            }
+
+            $('#detalleId').text(r.id);
+            $('#detalleName').text(r.name);
+            $('#detalleDescription').text(r.description ?? 'Sin descripción');
+            $('#detalleIsActive').text(r.isActive ? 'Activo' : 'Inactivo');
+
+            $('#modalDetalleRol').modal('show');
+        }
+
+        function editar(id) {
+            const r = roles.find(x => x.id === id);
+            if (!r) return;
+
+            $('#idInput').val(r.id);
+            $('#nameInput').val(r.name);
+            $('#descriptionInput').val(r.description);
+            $('#modalTitulo').text('Editar Rol');
+            $('#modalRol').modal('show');
+        }
+
+        async function guardar() {
+            const id = $('#idInput').val();
+            const name = $('#nameInput').val().trim();
+            const description = $('#descriptionInput').val().trim();
+
+            if (!name) {
+                toastr.warning('El nombre es obligatorio.');
+                return;
+            }
+
+            const response = await fetch(id ? endpoints.update(id) : endpoints.create, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                toastr.error(error?.message ?? 'No fue posible guardar.');
+                return;
+            }
+
+            $('#modalRol').modal('hide');
+            toastr.success(id ? 'Rol actualizado correctamente.' : 'Rol creado correctamente.');
+            cargarRoles();
+        }
+
+        async function eliminar(id) {
+            if (!confirm('¿Desea eliminar este rol?')) return;
+
+            const response = await fetch(endpoints.delete(id), {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                toastr.error('No fue posible eliminar el rol.');
+                return;
+            }
+
+            toastr.success('Rol eliminado correctamente.');
+            cargarRoles();
+        }
+
+        $(document).ready(function () {
+            cargarRoles();
+
+            $('#btnNuevo').click(function () {
+                limpiarFormulario();
+                $('#modalRol').modal('show');
+            });
+
+            $('#btnGuardar').click(guardar);
+
+            $(document).on('click', '.btn-detalle', function () {
+                detalle(parseInt($(this).data('id')));
+            });
+
+            $(document).on('click', '.btn-editar', function () {
+                editar(parseInt($(this).data('id')));
+            });
+
+            $(document).on('click', '.btn-eliminar', function () {
+                eliminar(parseInt($(this).data('id')));
+            });
+        });
+    </script>
+}

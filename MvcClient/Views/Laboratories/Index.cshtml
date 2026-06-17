@@ -1,0 +1,276 @@
+﻿@{
+    ViewData["Title"] = "Mantenimiento de Laboratorios";
+}
+
+<h3 class="mb-3">
+    <i class="fas fa-flask"></i> Mantenimiento de Laboratorios
+</h3>
+
+<button class="btn btn-primary mb-3" id="btnNuevo">
+    Nuevo Laboratorio
+</button>
+
+<table class="table table-bordered" id="tablaLaboratorios">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Edificio</th>
+            <th>Piso</th>
+            <th>Capacidad</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div class="modal fade" id="modalLaboratorio">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title">Laboratorio</h5>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="idInput" />
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input class="form-control" id="nameInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Edificio</label>
+                    <input class="form-control" id="buildingInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Piso</label>
+                    <input type="number" class="form-control" id="floorInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Capacidad</label>
+                    <input type="number" class="form-control" id="capacityInput" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleLaboratorio">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white">Detalle del Laboratorio</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <h5>Información del laboratorio</h5>
+
+                <p><strong>Nombre:</strong> <span id="detalleName"></span></p>
+                <p><strong>Edificio:</strong> <span id="detalleBuilding"></span></p>
+                <p><strong>Piso:</strong> <span id="detalleFloor"></span></p>
+                <p><strong>Capacidad:</strong> <span id="detalleCapacity"></span></p>
+                <p><strong>Estado:</strong> <span id="detalleIsActive"></span></p>
+
+                <hr />
+
+                <h5>Equipos asociados</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEquiposLaboratorio"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let laboratorios = [];
+
+        const endpoints = {
+            get: '/Laboratories/GetLaboratories',
+            create: '/Laboratories/CreateLaboratory',
+            update: (id) => `/Laboratories/UpdateLaboratory?id=${id}`,
+            delete: (id) => `/Laboratories/DeleteLaboratory?id=${id}`,
+            equipmentByLab: (id) => `/Equipment/GetEquipmentByLaboratory?id=${id}`
+        };
+
+        function cargarLaboratorios() {
+            $.get(endpoints.get, function(data) {
+                laboratorios = data;
+                const tbody = $('#tablaLaboratorios tbody');
+                tbody.empty();
+
+                if (!data || data.length === 0) {
+                    tbody.append('<tr><td colspan="7" class="text-center text-muted">No hay laboratorios registrados.</td></tr>');
+                    return;
+                }
+
+                data.forEach(l => {
+                    tbody.append(`
+                        <tr>
+                            <td>${l.id}</td>
+                            <td>${l.name}</td>
+                            <td>${l.building}</td>
+                            <td>${l.floor}</td>
+                            <td>${l.capacity}</td>
+                            <td>${l.isActive ? 'Activo' : 'Inactivo'}</td>
+                            <td>
+                                <button class="btn btn-info btnDetalle" data-id="${l.id}">Ver</button>
+                                <button class="btn btn-warning btnEditar" data-id="${l.id}">Editar</button>
+                                <button class="btn btn-danger btnEliminar" data-id="${l.id}">Eliminar</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            }).fail(function () {
+                toastr.error('No fue posible cargar los laboratorios.');
+            });
+        }
+
+        $('#btnNuevo').click(function() {
+            $('#idInput').val('');
+            $('#nameInput').val('');
+            $('#buildingInput').val('');
+            $('#floorInput').val('');
+            $('#capacityInput').val('');
+
+            $('#modalLaboratorio').modal('show');
+        });
+
+        $(document).on('click', '.btnEditar', function() {
+            const id = $(this).data('id');
+            const lab = laboratorios.find(l => l.id === id);
+
+            if (!lab) {
+                toastr.error('Laboratorio no encontrado.');
+                return;
+            }
+
+            $('#idInput').val(lab.id);
+            $('#nameInput').val(lab.name);
+            $('#buildingInput').val(lab.building);
+            $('#floorInput').val(lab.floor);
+            $('#capacityInput').val(lab.capacity);
+
+            $('#modalLaboratorio').modal('show');
+        });
+
+        $(document).on('click', '.btnDetalle', function () {
+            const id = $(this).data('id');
+            const lab = laboratorios.find(l => l.id === id);
+
+            if (!lab) {
+                toastr.error('Laboratorio no encontrado.');
+                return;
+            }
+
+            $('#detalleName').text(lab.name);
+            $('#detalleBuilding').text(lab.building);
+            $('#detalleFloor').text(lab.floor);
+            $('#detalleCapacity').text(lab.capacity);
+            $('#detalleIsActive').text(lab.isActive ? 'Activo' : 'Inactivo');
+
+            const tbody = $('#tablaEquiposLaboratorio');
+            tbody.empty();
+
+            $.get(endpoints.equipmentByLab(id), function (data) {
+                if (!data || data.length === 0) {
+                    tbody.append('<tr><td colspan="5" class="text-center text-muted">No hay equipos asociados.</td></tr>');
+                } else {
+                    data.forEach(e => {
+                        tbody.append(`
+                            <tr>
+                                <td>${e.code}</td>
+                                <td>${e.brand}</td>
+                                <td>${e.model}</td>
+                                <td>${e.type}</td>
+                                <td>${e.status}</td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                $('#modalDetalleLaboratorio').modal('show');
+            }).fail(function () {
+                tbody.append('<tr><td colspan="5" class="text-center text-muted">No hay equipos asociados.</td></tr>');
+                $('#modalDetalleLaboratorio').modal('show');
+            });
+        });
+
+        $('#btnGuardar').click(async function() {
+            const id = $('#idInput').val();
+
+            const payload = {
+                name: $('#nameInput').val(),
+                building: $('#buildingInput').val(),
+                floor: parseInt($('#floorInput').val()),
+                capacity: parseInt($('#capacityInput').val())
+            };
+
+            const response = await fetch(id ? endpoints.update(id) : endpoints.create, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                $('#modalLaboratorio').modal('hide');
+                toastr.success('Laboratorio guardado.');
+                cargarLaboratorios();
+            } else {
+                toastr.error('No fue posible guardar.');
+            }
+        });
+
+        $(document).on('click', '.btnEliminar', async function() {
+            const id = $(this).data('id');
+
+            if (!confirm('¿Desea eliminar este laboratorio?')) return;
+
+            const response = await fetch(endpoints.delete(id), {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                toastr.success('Laboratorio eliminado.');
+                cargarLaboratorios();
+            } else {
+                toastr.error('No fue posible eliminar.');
+            }
+        });
+
+        $(document).ready(function() {
+            cargarLaboratorios();
+        });
+    </script>
+}

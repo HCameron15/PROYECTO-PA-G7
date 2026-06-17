@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../MvcClient/Uam.AdvancedProgramming.MvcClient.csproj" />
+  <Project Path="Uam.AdvancedProgramming.Api.csproj" />
+</Solution>

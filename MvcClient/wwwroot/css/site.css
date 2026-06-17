@@ -1,0 +1,186 @@
+body {
+    font-size: 0.92rem;
+}
+
+.content-wrapper {
+    background-color: #f0f2f5;
+}
+
+/* ── Sidebar azul claro con texto blanco ── */
+.main-sidebar {
+    background-color: #4a90d9 !important;
+}
+
+.main-sidebar .brand-link {
+    background-color: #3a7bc8 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+.sidebar-dark-primary .nav-sidebar .nav-link {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+.sidebar-dark-primary .nav-sidebar .nav-link:hover,
+.sidebar-dark-primary .nav-sidebar .nav-link.active {
+    background-color: rgba(255,255,255,0.2) !important;
+    color: #ffffff !important;
+}
+
+.sidebar-dark-primary .nav-sidebar .nav-icon {
+    color: rgba(255,255,255,0.8) !important;
+}
+
+/* ── Card principal ── */
+.card-mantenimiento {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    overflow: hidden;
+}
+
+.card-mantenimiento .card-header {
+    background: #ffffff;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 2px solid #e8f0fe;
+}
+
+.card-mantenimiento .card-header .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a73e8;
+    letter-spacing: 0.3px;
+}
+
+.badge-count {
+    background: #e8f0fe;
+    color: #1a73e8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    vertical-align: middle;
+}
+
+/* ── Tabla ── */
+#tablaEstudiantes thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a6170;
+    border-bottom: 2px solid #dee2e6;
+    vertical-align: middle;
+}
+
+#tablaEstudiantes tbody tr {
+    transition: background 0.15s;
+}
+
+#tablaEstudiantes tbody tr:hover {
+    background-color: #eef3fc !important;
+}
+
+#tablaEstudiantes td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+    color: #343a40;
+    border-color: #f0f0f0;
+}
+
+/* ── Botones de acción ── */
+.btn-accion {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+    vertical-align: middle;
+}
+
+.btn-accion:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.acciones-col {
+    white-space: nowrap;
+}
+
+/* ── Filas más compactas ── */
+#tablaEstudiantes td,
+#tablaEstudiantes th {
+    padding: 0.55rem 0.75rem;
+}
+
+/* ── Modal formulario ── */
+.modal-header-primary {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    color: #fff;
+    border-radius: 0;
+}
+
+.modal-header-danger {
+    background: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
+    color: #fff;
+    border-radius: 0;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.input-group-text {
+    background-color: #e8f0fe;
+    border-color: #c5d5f5;
+    color: #1a73e8;
+}
+
+.form-control:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 0.2rem rgba(26,115,232,0.18);
+}
+
+/* ── Spinner ── */
+#loadingSpinner {
+    padding: 3rem 0;
+}
+
+/* ── Icono advertencia modal eliminar ── */
+.icono-advertencia {
+    font-size: 4rem;
+    color: #f59e0b;
+}
+
+/* ── Botón nuevo ── */
+.btn-nuevo {
+    background: #1a73e8;
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 8px 22px;
+    font-size: 0.88rem;
+    letter-spacing: 0.4px;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.35);
+    transition: all 0.2s ease;
+}
+
+.btn-nuevo:hover {
+    background: #0d47a1;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(26,115,232,0.45);
+    transform: translateY(-1px);
+}
+
+.btn-nuevo:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(26,115,232,0.25);
+}

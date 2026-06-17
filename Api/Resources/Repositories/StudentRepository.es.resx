@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="OperationSuccessful" xml:space="preserve"><value>Operacion realizada con exito.</value></data>
+  <data name="StudentsNotFound" xml:space="preserve"><value>No se encontraron estudiantes.</value></data>
+  <data name="StudentNotFound" xml:space="preserve"><value>No se encontro el estudiante especificado.</value></data>
+  <data name="StudentCreatedSuccessfully" xml:space="preserve"><value>El estudiante se ha creado con exito.</value></data>
+  <data name="StudentUpdatedSuccessfully" xml:space="preserve"><value>El estudiante se ha actualizado con exito.</value></data>
+  <data name="StudentDeletedSuccessfully" xml:space="preserve"><value>El estudiante se ha eliminado con exito.</value></data>
+  <data name="StudentEmailExists" xml:space="preserve"><value>El correo electronico ya esta registrado.</value></data>
+</root>
