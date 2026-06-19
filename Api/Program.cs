@@ -124,6 +124,14 @@ app.UseAuthorization();
 // Mapea los controladores para que sus rutas queden activas.
 app.MapControllers();
 
+// Ejecuta el seed de la base de datos para crear roles y usuario admin si no existen.
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<Uam.AdvancedProgramming.Api.Data.AppDbContext>();
+
+    await Uam.AdvancedProgramming.Api.Data.Seed.DbSeeder.SeedAsync(context);
+}
+
 // Inicia la aplicación y la deja escuchando solicitudes.
 app.Run();
 
