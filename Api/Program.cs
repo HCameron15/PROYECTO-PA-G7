@@ -98,6 +98,11 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = supportedCultures
 });
 
+
+//Console.WriteLine(
+//    builder.Configuration.GetConnectionString("DefaultConnection"));
+
+
 // Middleware global para capturar excepciones y devolver respuesta JSON uniforme.
 app.UseMiddleware<Uam.AdvancedProgramming.Api.Middlewares.ExceptionMiddleware>();
 
