@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Localization;
 using Uam.AdvancedProgramming.Api.Data;
 using Uam.AdvancedProgramming.Api.Interfaces;
+using Uam.AdvancedProgramming.Api.Services;
 
 namespace Uam.AdvancedProgramming.Api.Repositories;
 
@@ -12,7 +13,8 @@ public class UnitOfWork(
     IStringLocalizer<EquipmentRepository> equipmentLocalizer,
     IStringLocalizer<RoleRepository> roleLocalizer,
     IStringLocalizer<UserRepository> userLocalizer,
-    IStringLocalizer<AuthRepository> authLocalizer
+    IStringLocalizer<AuthRepository> authLocalizer,
+    IEmailService emailService
 ) : IUnitOfWork
 {
     private IStudentRepository? _students;
@@ -21,6 +23,7 @@ public class UnitOfWork(
     private IRoleRepository? _roles;
     private IUserRepository? _users;
     private IAuthRepository? _auth;
+    
 
     public IStudentRepository Students =>
         _students ??= new StudentRepository(context, studentLocalizer);
@@ -38,7 +41,7 @@ public class UnitOfWork(
         _users ??= new UserRepository(context, userLocalizer);
 
     public IAuthRepository Auth =>
-        _auth ??= new AuthRepository(context, configuration, authLocalizer);
+        _auth ??= new AuthRepository(context, configuration, authLocalizer, emailService);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         context.SaveChangesAsync(cancellationToken);

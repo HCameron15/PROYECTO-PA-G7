@@ -21,6 +21,10 @@
         public DateTime UpdatedAtUtc { get; set; }
 
         public Role Role { get; set; } = null!;
+
+        public ICollection<OtpCode> OtpCodes { get; set; } = [];
+
+        public ICollection<PendingLoginSession> PendingLoginSessions { get; set; } = [];
     }
 
 }

@@ -22,10 +22,3 @@ public class LogoutRequestDto
     [Required]
     public string RefreshToken { get; set; } = string.Empty;
 }
-
-public record LoginResponseDto(
-    string AccessToken,
-    string RefreshToken,
-    string TokenType,
-    int ExpiresIn
-);

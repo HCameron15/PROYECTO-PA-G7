@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Uam.AdvancedProgramming.Api.DTOs;
 using Uam.AdvancedProgramming.Api.Interfaces;
+using Uam.AdvancedProgramming.Api.DTOs.Auth;
 
 namespace Uam.AdvancedProgramming.Api.Controllers;
 
@@ -28,6 +29,25 @@ public class AuthController(
         }
 
         var result = await unitOfWork.Auth.LoginAsync(resource, cancellationToken);
+
+        return result.Success ? Ok(result) : Unauthorized(result);
+    }
+
+    [AllowAnonymous]
+    [HttpPost(nameof(VerifyOtp))]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto resource, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ApiOperationResultDto<object>
+            {
+                Success = false,
+                Code = StatusCodes.Status400BadRequest.ToString(),
+                Message = stringLocalizer["InvalidModel"].Value
+            });
+        }
+
+        var result = await unitOfWork.Auth.VerifyOtpAsync(resource, cancellationToken);
 
         return result.Success ? Ok(result) : Unauthorized(result);
     }

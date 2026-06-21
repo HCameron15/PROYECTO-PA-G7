@@ -38,6 +38,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
+
+    public DbSet<PendingLoginSession> PendingLoginSessions => Set<PendingLoginSession>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Student>(entity =>
@@ -241,6 +245,64 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.HasOne(x => x.User)
                 .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OtpCode>(entity =>
+        {
+            entity.ToTable("OtpCodes");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.UserId)
+                .IsRequired();
+
+            entity.Property(x => x.Code)
+                .HasMaxLength(10)
+                .IsRequired();
+
+            entity.Property(x => x.ExpiresAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.IsUsed)
+                .HasDefaultValue(false);
+
+            entity.Property(x => x.CreatedAtUtc)
+                .IsRequired();
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.OtpCodes)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PendingLoginSession>(entity =>
+        {
+            entity.ToTable("PendingLoginSessions");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.UserId)
+                .IsRequired();
+
+            entity.Property(x => x.SessionToken)
+                .IsRequired();
+
+            entity.HasIndex(x => x.SessionToken)
+                .IsUnique();
+
+            entity.Property(x => x.ExpiresAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.IsUsed)
+                .HasDefaultValue(false);
+
+            entity.Property(x => x.CreatedAtUtc)
+                .IsRequired();
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.PendingLoginSessions)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });

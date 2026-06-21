@@ -1,10 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Globalization;
 using System.Text;
+using Uam.AdvancedProgramming.Api.Models.Configurations;
+using Microsoft.Extensions.Options;
+using Uam.AdvancedProgramming.Api.Interfaces;
+using Uam.AdvancedProgramming.Api.Services;
 
 // Aquí creamos el constructor principal de la aplicación web.
 // Este objeto "builder" se usa para registrar servicios y configuraciones.
@@ -47,6 +51,13 @@ builder.Services.AddSwaggerGen(options =>
 // La ruta de recursos se lee desde appsettings.json -> Localization:ResourcesPath.
 var resourcesPath = builder.Configuration["Localization:ResourcesPath"] ?? "Resources";
 builder.Services.AddLocalization(options => options.ResourcesPath = resourcesPath);
+
+// Registramos configuración de SMTP para inyección de dependencias.
+builder.Services.Configure<SmtpSettings>(
+builder.Configuration.GetSection("Smtp"));
+
+// Registramos servicio de email para inyección de dependencias.
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Registramos el DbContext (conexión a base de datos SQL Server).
 // La cadena de conexión se lee desde appsettings.json -> ConnectionStrings:DefaultConnection.
