@@ -4,26 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Uam.AdvancedProgramming.Api.Data.Seed;
 
-/// <summary>
-/// Inicializa datos base del sistema (roles y usuario administrador).
-/// Se ejecuta al iniciar la aplicación.
-/// </summary>
 public static class DbSeeder
 {
-    /// <summary>
-    /// Ejecuta el seed inicial de la base de datos.
-    /// </summary>
     public static async Task SeedAsync(AppDbContext context)
     {
-        // Asegura que la base de datos esté creada
         await context.Database.MigrateAsync();
 
-        // =========================
-        // 1. CREAR ROLES BASE
-        // =========================
-        if (!await context.Roles.AnyAsync())
+        var adminRole = await context.Roles
+            .FirstOrDefaultAsync(r => r.Name == "Admin");
+
+        if (adminRole is null)
         {
-            var adminRole = new Role
+            adminRole = new Role
             {
                 Name = "Admin",
                 Description = "Administrator role",
@@ -32,7 +24,16 @@ public static class DbSeeder
                 UpdatedAtUtc = DateTime.UtcNow
             };
 
-            var userRole = new Role
+            await context.Roles.AddAsync(adminRole);
+            await context.SaveChangesAsync();
+        }
+
+        var userRole = await context.Roles
+            .FirstOrDefaultAsync(r => r.Name == "User");
+
+        if (userRole is null)
+        {
+            userRole = new Role
             {
                 Name = "User",
                 Description = "Standard user role",
@@ -41,18 +42,12 @@ public static class DbSeeder
                 UpdatedAtUtc = DateTime.UtcNow
             };
 
-            await context.Roles.AddRangeAsync(adminRole, userRole);
+            await context.Roles.AddAsync(userRole);
             await context.SaveChangesAsync();
         }
 
-        // =========================
-        // 2. CREAR USUARIO ADMIN
-        // =========================
-
         if (!await context.Users.AnyAsync(u => u.Email == "admin@uam.com"))
         {
-            var adminRole = await context.Roles.FirstAsync(r => r.Name == "Admin");
-
             var adminUser = new User
             {
                 FirstName = "System",

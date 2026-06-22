@@ -1,0 +1,60 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Uam.AdvancedProgramming.MvcClient.Models.VerifyOtpRequestDto
+
+@{
+    ViewData["Title"] = "Verificar OTP";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+
+            <div class="card shadow">
+
+                <div class="card-header text-center">
+                    <h4>Verificación OTP</h4>
+                </div>
+
+                <div class="card-body">
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger">
+                            @ViewBag.Error
+                        </div>
+                    }
+
+                    <form asp-action="VerifyOtp" method="post">
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Código OTP
+                            </label>
+
+                            <input asp-for="Code"
+                                   class="form-control"
+                                   maxlength="6" />
+
+                            <span asp-validation-for="Code"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Verificar
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

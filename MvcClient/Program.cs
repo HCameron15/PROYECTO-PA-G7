@@ -7,6 +7,9 @@ builder.Services.AddControllersWithViews();
 // Registramos HttpClient para consumir el API desde el servidor MVC.
 builder.Services.AddHttpClient();
 
+// Registramos sesión para guardar temporalmente el SessionToken del OTP.
+builder.Services.AddSession();
+
 // Construimos la aplicación con todos los servicios ya registrados.
 var app = builder.Build();
 
@@ -23,17 +26,20 @@ app.UseHttpsRedirection();
 // Activa enrutamiento.
 app.UseRouting();
 
-// Activa middleware de autorización (queda listo por si se agrega seguridad del lado MVC).
+// Activa la sesión.
+app.UseSession();
+
+// Activa middleware de autorización.
 app.UseAuthorization();
 
-// Mapea archivos estáticos (css/js/img) para .NET 10.
+// Mapea archivos estáticos.
 app.MapStaticAssets();
 
-// Ruta por defecto de la app MVC: Maintenance/Index.
+// Ruta por defecto de la app MVC.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}")
     .WithStaticAssets();
 
-// Inicia la aplicación y la deja escuchando peticiones HTTP.
+// Inicia la aplicación.
 app.Run();

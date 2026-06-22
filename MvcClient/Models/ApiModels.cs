@@ -20,6 +20,31 @@ public class LoginRequestDto
 
 public class LoginResponseDto
 {
+    public string SessionToken { get; set; } = string.Empty;
+
+    public string AccessToken { get; set; } = string.Empty;
+
+    public string RefreshToken { get; set; } = string.Empty;
+
+    public string TokenType { get; set; } = "Bearer";
+
+    public int ExpiresIn { get; set; }
+}
+
+public class VerifyOtpRequestDto
+{
+    public string Code { get; set; } = string.Empty;
+}
+
+public class VerifyOtpApiRequestDto
+{
+    public string SessionToken { get; set; } = string.Empty;
+
+    public string Code { get; set; } = string.Empty;
+}
+
+public class VerifyOtpResponseDto
+{
     public string AccessToken { get; set; } = string.Empty;
 
     public string RefreshToken { get; set; } = string.Empty;
