@@ -102,19 +102,23 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
             return View(dto);
         }
 
+        var expiresIn = apiResult.Result.ExpiresIn > 0
+            ? apiResult.Result.ExpiresIn
+            : 1800;
+
         Response.Cookies.Append("AccessToken", apiResult.Result.AccessToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddSeconds(apiResult.Result.ExpiresIn)
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
         });
 
         Response.Cookies.Append("RefreshToken", apiResult.Result.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
 

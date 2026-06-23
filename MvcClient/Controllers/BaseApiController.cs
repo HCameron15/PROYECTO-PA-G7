@@ -26,13 +26,12 @@ public abstract class BaseApiController(
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            Response.Redirect("/Auth/Login");
             return null;
         }
 
         var client = httpClientFactory.CreateClient();
 
-        var request = BuildRequest(method, endpoint, accessToken, body);
+        using var request = BuildRequest(method, endpoint, accessToken, body);
 
         var response = await client.SendAsync(request, cancellationToken);
 
@@ -47,16 +46,15 @@ public abstract class BaseApiController(
         {
             Response.Cookies.Delete("AccessToken");
             Response.Cookies.Delete("RefreshToken");
-            Response.Redirect("/Auth/Login");
             return null;
         }
 
-        var retryRequest = BuildRequest(method, endpoint, newAccessToken, body);
+        using var retryRequest = BuildRequest(method, endpoint, newAccessToken, body);
 
         return await client.SendAsync(retryRequest, cancellationToken);
     }
 
-    private HttpRequestMessage BuildRequest(
+    private static HttpRequestMessage BuildRequest(
         HttpMethod method,
         string endpoint,
         string accessToken,
@@ -122,16 +120,16 @@ public abstract class BaseApiController(
         Response.Cookies.Append("AccessToken", apiResult.Result.AccessToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddSeconds(apiResult.Result.ExpiresIn)
         });
 
         Response.Cookies.Append("RefreshToken", apiResult.Result.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
 
