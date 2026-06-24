@@ -8,6 +8,9 @@ namespace Uam.AdvancedProgramming.MvcClient.Controllers;
 
 public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration configuration) : Controller
 {
+    /// <summary>
+    /// 
+    /// </summary>
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
