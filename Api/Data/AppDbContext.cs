@@ -42,8 +42,45 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<PendingLoginSession> PendingLoginSessions => Set<PendingLoginSession>();
 
+    public DbSet<PasswordResetRequest> PasswordResetRequests => Set<PasswordResetRequest>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<PasswordResetRequest>(entity =>
+        {
+            entity.ToTable("PasswordResetRequests");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.SessionToken)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.HasIndex(x => x.SessionToken)
+                .IsUnique();
+
+            entity.Property(x => x.Code)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            entity.Property(x => x.ExpiresAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.IsUsed)
+                .HasDefaultValue(false);
+
+            entity.Property(x => x.CreatedAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.UsedAtUtc)
+                .IsRequired(false);
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.PasswordResetRequests)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<Student>(entity =>
         {
             entity.ToTable("Students");
@@ -247,6 +284,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(x => x.RevokedAtUtc)
+                .IsRequired(false);
+
+            entity.Property(x => x.RevokedReason)
+                .HasMaxLength(200)
+                .IsRequired(false);
         });
 
         modelBuilder.Entity<OtpCode>(entity =>

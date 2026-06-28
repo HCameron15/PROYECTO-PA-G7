@@ -180,6 +180,308 @@ public class AuthRepository(
         return result;
     }
 
+    public async Task<ApiOperationResultDto<ForgotPasswordResponseDto>> ForgotPasswordAsync(
+    ForgotPasswordRequestDto resource,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<ForgotPasswordResponseDto>();
+
+        var genericMessage = localizer["PasswordRecoveryInstructionsSent"].Value;
+        var normalizedEmail = resource.Email.Trim().ToLowerInvariant();
+
+        var user = await context.Users
+            .FirstOrDefaultAsync(x => x.Email == normalizedEmail && x.IsActive, cancellationToken);
+
+        if (user is null)
+        {
+            result.Success = true;
+            result.Code = StatusCodes.Status200OK.ToString();
+            result.Message = genericMessage;
+            result.Result = new ForgotPasswordResponseDto(genericMessage);
+            return result;
+        }
+
+        var now = DateTime.UtcNow;
+
+        var previousRequests = await context.PasswordResetRequests
+            .Where(x => x.UserId == user.Id && !x.IsUsed)
+            .ToListAsync(cancellationToken);
+
+        foreach (var request in previousRequests)
+        {
+            request.IsUsed = true;
+            request.UsedAtUtc = now;
+        }
+
+        var code = GenerateOtpCode();
+
+        var expirationMinutes = configuration.GetValue("PasswordReset:CodeExpirationMinutes", 10);
+
+        var passwordResetRequest = new PasswordResetRequest
+        {
+            UserId = user.Id,
+            SessionToken = Guid.NewGuid().ToString(),
+            Code = code,
+            ExpiresAtUtc = now.AddMinutes(expirationMinutes),
+            IsUsed = false,
+            CreatedAtUtc = now
+        };
+
+        await context.PasswordResetRequests.AddAsync(passwordResetRequest, cancellationToken);
+
+        var emailSent = await emailService.SendOtpAsync(
+            user.Email,
+            code,
+            cancellationToken);
+
+        if (!emailSent)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status500InternalServerError.ToString();
+            result.Message = localizer["EmailSendFailed"].Value;
+            return result;
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = genericMessage;
+        result.Result = new ForgotPasswordResponseDto(genericMessage);
+
+        return result;
+    }
+
+    public async Task<ApiOperationResultDto<object>> ResetPasswordAsync(
+    ResetPasswordRequestDto resource,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<object>();
+
+        if (resource.NewPassword != resource.ConfirmPassword)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status400BadRequest.ToString();
+            result.Message = localizer["PasswordsDoNotMatch"].Value;
+            return result;
+        }
+
+        var resetRequest = await context.PasswordResetRequests
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(
+                x => x.SessionToken == resource.SessionToken &&
+                     x.Code == resource.Code &&
+                     !x.IsUsed,
+                cancellationToken);
+
+        if (resetRequest is null)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status401Unauthorized.ToString();
+            result.Message = localizer["InvalidPasswordResetRequest"].Value;
+            return result;
+        }
+
+        var now = DateTime.UtcNow;
+
+        if (resetRequest.ExpiresAtUtc <= now)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status401Unauthorized.ToString();
+            result.Message = localizer["ExpiredPasswordResetCode"].Value;
+            return result;
+        }
+
+        if (!resetRequest.User.IsActive)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status401Unauthorized.ToString();
+            result.Message = localizer["UserInactive"].Value;
+            return result;
+        }
+
+        if (BCrypt.Net.BCrypt.Verify(resource.NewPassword, resetRequest.User.PasswordHash))
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status400BadRequest.ToString();
+            result.Message = localizer["NewPasswordSameAsOld"].Value;
+            return result;
+        }
+
+        resetRequest.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(resource.NewPassword);
+        resetRequest.User.UpdatedAtUtc = now;
+
+        resetRequest.IsUsed = true;
+        resetRequest.UsedAtUtc = now;
+
+        await RevokeActiveRefreshTokensAsync(
+            resetRequest.UserId,
+            localizer["PasswordResetRevokedSessions"].Value,
+            cancellationToken);
+
+        context.PasswordResetRequests.Update(resetRequest);
+        context.Users.Update(resetRequest.User);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = localizer["PasswordResetSuccessful"].Value;
+
+        return result;
+    }
+
+    public async Task<ApiOperationResultDto<object>> ChangePasswordAsync(
+    int userId,
+    string? currentRefreshToken,
+    ChangePasswordRequestDto resource,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<object>();
+
+        if (resource.NewPassword != resource.ConfirmPassword)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status400BadRequest.ToString();
+            result.Message = localizer["PasswordsDoNotMatch"].Value;
+            return result;
+        }
+
+        var user = await context.Users
+            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null || !user.IsActive)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status401Unauthorized.ToString();
+            result.Message = localizer["UserInactive"].Value;
+            return result;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(resource.CurrentPassword, user.PasswordHash))
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status401Unauthorized.ToString();
+            result.Message = localizer["CurrentPasswordInvalid"].Value;
+            return result;
+        }
+
+        if (BCrypt.Net.BCrypt.Verify(resource.NewPassword, user.PasswordHash))
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status400BadRequest.ToString();
+            result.Message = localizer["NewPasswordSameAsOld"].Value;
+            return result;
+        }
+
+        var now = DateTime.UtcNow;
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(resource.NewPassword);
+        user.UpdatedAtUtc = now;
+
+        await RevokeActiveRefreshTokensAsync(
+            userId,
+            localizer["PasswordChangeRevokedSessions"].Value,
+            cancellationToken,
+            currentRefreshToken);
+
+        context.Users.Update(user);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = localizer["PasswordChangedSuccessfully"].Value;
+
+        return result;
+    }
+
+    public async Task<ApiOperationResultDto<List<SessionResponseDto>>> GetMySessionsAsync(
+    int userId,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<List<SessionResponseDto>>();
+
+        var now = DateTime.UtcNow;
+
+        var sessions = await context.RefreshTokens
+            .Where(x => x.UserId == userId &&
+                        !x.IsRevoked &&
+                        x.ExpiresAtUtc > now)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Select(x => new SessionResponseDto(
+                x.Id,
+                x.CreatedAtUtc,
+                x.ExpiresAtUtc))
+            .ToListAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = localizer["SessionsRetrievedSuccessfully"].Value;
+        result.Result = sessions;
+
+        return result;
+    }
+
+    public async Task<ApiOperationResultDto<object>> RevokeSessionAsync(
+    int userId,
+    int refreshTokenId,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<object>();
+
+        var now = DateTime.UtcNow;
+
+        var refreshToken = await context.RefreshTokens
+            .FirstOrDefaultAsync(
+                x => x.Id == refreshTokenId &&
+                     x.UserId == userId &&
+                     !x.IsRevoked &&
+                     x.ExpiresAtUtc > now,
+                cancellationToken);
+
+        if (refreshToken is null)
+        {
+            result.Success = false;
+            result.Code = StatusCodes.Status404NotFound.ToString();
+            result.Message = localizer["SessionNotFound"].Value;
+            return result;
+        }
+
+        refreshToken.IsRevoked = true;
+        refreshToken.RevokedAtUtc = now;
+        refreshToken.RevokedReason = localizer["SessionRevokedByUser"].Value;
+
+        context.RefreshTokens.Update(refreshToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = localizer["SessionRevokedSuccessfully"].Value;
+
+        return result;
+    }
+
+    public async Task<ApiOperationResultDto<object>> RevokeAllSessionsAsync(
+    int userId,
+    CancellationToken cancellationToken = default)
+    {
+        var result = new ApiOperationResultDto<object>();
+
+        await RevokeActiveRefreshTokensAsync(
+            userId,
+            localizer["AllSessionsRevokedByUser"].Value,
+            cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        result.Success = true;
+        result.Code = StatusCodes.Status200OK.ToString();
+        result.Message = localizer["AllSessionsRevokedSuccessfully"].Value;
+
+        return result;
+    }
+
     public async Task<ApiOperationResultDto<VerifyOtpResponseDto>> RefreshTokenAsync(RefreshTokenRequestDto resource, CancellationToken cancellationToken = default)
     {
         var result = new ApiOperationResultDto<VerifyOtpResponseDto>();
@@ -241,6 +543,36 @@ public class AuthRepository(
         result.Message = localizer["LogoutSuccessful"].Value;
 
         return result;
+    }
+
+    private async Task RevokeActiveRefreshTokensAsync(
+    int userId,
+    string revokedReason,
+    CancellationToken cancellationToken,
+    string? excludedRefreshToken = null)
+    {
+        var now = DateTime.UtcNow;
+
+        var activeRefreshTokens = await context.RefreshTokens
+            .Where(x => x.UserId == userId &&
+                        !x.IsRevoked &&
+                        x.ExpiresAtUtc > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeRefreshTokens)
+        {
+            if (!string.IsNullOrWhiteSpace(excludedRefreshToken) &&
+                token.Token == excludedRefreshToken)
+            {
+                continue;
+            }
+
+            token.IsRevoked = true;
+            token.RevokedAtUtc = now;
+            token.RevokedReason = revokedReason;
+        }
+
+        context.RefreshTokens.UpdateRange(activeRefreshTokens);
     }
 
     private static string GenerateOtpCode()

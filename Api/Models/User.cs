@@ -25,6 +25,8 @@
         public ICollection<OtpCode> OtpCodes { get; set; } = [];
 
         public ICollection<PendingLoginSession> PendingLoginSessions { get; set; } = [];
+
+        public ICollection<PasswordResetRequest> PasswordResetRequests { get; set; } = [];
     }
 
 }

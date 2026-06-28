@@ -15,4 +15,8 @@ public class RefreshToken
     public DateTime CreatedAtUtc { get; set; }
 
     public User User { get; set; } = null!;
+
+    public DateTime? RevokedAtUtc { get; set; }
+
+    public string? RevokedReason { get; set; }
 }

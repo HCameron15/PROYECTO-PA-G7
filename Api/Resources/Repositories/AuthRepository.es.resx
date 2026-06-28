@@ -117,8 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AllSessionsRevokedByUser" xml:space="preserve">
+    <value>Todas las sesiones fueron revocadas por el usuario.</value>
+  </data>
+  <data name="AllSessionsRevokedSuccessfully" xml:space="preserve">
+    <value>Todas las sesiones activas fueron revocadas correctamente.</value>
+  </data>
+  <data name="CurrentPasswordInvalid" xml:space="preserve">
+    <value>La contraseña actual no es válida.</value>
+  </data>
+  <data name="ExpiredPasswordResetCode" xml:space="preserve">
+    <value>El código de recuperación ha expirado.</value>
+  </data>
   <data name="InvalidCredentials" xml:space="preserve">
     <value>Credenciales inválidas.</value>
+  </data>
+  <data name="InvalidPasswordResetRequest" xml:space="preserve">
+    <value>La solicitud de recuperación no es válida.</value>
   </data>
   <data name="InvalidRefreshToken" xml:space="preserve">
     <value>Token de refrescamiento inválido.</value>
@@ -129,7 +144,43 @@
   <data name="LogoutSuccessful" xml:space="preserve">
     <value>Sesión cerrada correctamente.</value>
   </data>
+  <data name="NewPasswordSameAsOld" xml:space="preserve">
+    <value>La nueva contraseña no puede ser igual a la contraseña anterior.</value>
+  </data>
+  <data name="PasswordChangedSuccessfully" xml:space="preserve">
+    <value>Contraseña cambiada correctamente.</value>
+  </data>
+  <data name="PasswordChangeRevokedSessions" xml:space="preserve">
+    <value>Sesiones revocadas por cambio de contraseña.</value>
+  </data>
+  <data name="PasswordRecoveryInstructionsSent" xml:space="preserve">
+    <value>Si el correo está registrado, se enviarán instrucciones de recuperación.</value>
+  </data>
+  <data name="PasswordResetRevokedSessions" xml:space="preserve">
+    <value>Sesiones revocadas por recuperación de contraseña.</value>
+  </data>
+  <data name="PasswordResetSuccessful" xml:space="preserve">
+    <value>Contraseña restablecida correctamente.</value>
+  </data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve">
+    <value>La nueva contraseña y la confirmación no coinciden.</value>
+  </data>
+  <data name="SessionNotFound" xml:space="preserve">
+    <value>La sesión no existe o no está activa.</value>
+  </data>
+  <data name="SessionRevokedByUser" xml:space="preserve">
+    <value>Sesión revocada por el usuario.</value>
+  </data>
+  <data name="SessionRevokedSuccessfully" xml:space="preserve">
+    <value>Sesión revocada correctamente.</value>
+  </data>
+  <data name="SessionsRetrievedSuccessfully" xml:space="preserve">
+    <value>Sesiones activas obtenidas correctamente.</value>
+  </data>
   <data name="TokenRefreshedSuccessfully" xml:space="preserve">
     <value>Sesión renovada correctamente.</value>
+  </data>
+  <data name="UserInactive" xml:space="preserve">
+    <value>El usuario está inactivo.</value>
   </data>
 </root>
