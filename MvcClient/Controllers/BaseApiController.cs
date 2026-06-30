@@ -22,7 +22,8 @@ public abstract class BaseApiController(
         object? body,
         CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["AccessToken"];
+        var accessToken = HttpContext.Session.GetString("AccessToken")
+                          ?? Request.Cookies["AccessToken"];
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -46,6 +47,10 @@ public abstract class BaseApiController(
         {
             Response.Cookies.Delete("AccessToken");
             Response.Cookies.Delete("RefreshToken");
+
+            HttpContext.Session.Remove("AccessToken");
+            HttpContext.Session.Remove("RefreshToken");
+
             return null;
         }
 
@@ -79,7 +84,8 @@ public abstract class BaseApiController(
         HttpClient client,
         CancellationToken cancellationToken)
     {
-        var refreshToken = Request.Cookies["RefreshToken"];
+        var refreshToken = HttpContext.Session.GetString("RefreshToken")
+                           ?? Request.Cookies["RefreshToken"];
 
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
@@ -110,7 +116,7 @@ public abstract class BaseApiController(
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        var apiResult = JsonSerializer.Deserialize<ApiResponse<LoginResponseDto>>(content, JsonOptions);
+        var apiResult = JsonSerializer.Deserialize<ApiResponse<VerifyOtpResponseDto>>(content, JsonOptions);
 
         if (apiResult?.Result is null || !apiResult.Success)
         {
@@ -120,18 +126,23 @@ public abstract class BaseApiController(
         Response.Cookies.Append("AccessToken", apiResult.Result.AccessToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps,
+            Secure = false,
             SameSite = SameSiteMode.Lax,
+            Path = "/",
             Expires = DateTimeOffset.UtcNow.AddSeconds(apiResult.Result.ExpiresIn)
         });
 
         Response.Cookies.Append("RefreshToken", apiResult.Result.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps,
+            Secure = false,
             SameSite = SameSiteMode.Lax,
+            Path = "/",
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
+
+        HttpContext.Session.SetString("AccessToken", apiResult.Result.AccessToken);
+        HttpContext.Session.SetString("RefreshToken", apiResult.Result.RefreshToken);
 
         return apiResult.Result.AccessToken;
     }

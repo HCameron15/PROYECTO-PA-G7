@@ -23,7 +23,10 @@ public class MaintenanceController : BaseApiController
 
     public IActionResult Index()
     {
-        if (string.IsNullOrWhiteSpace(Request.Cookies["AccessToken"]))
+        var accessToken = HttpContext.Session.GetString("AccessToken")
+                          ?? Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return RedirectToAction("Login", "Auth");
         }

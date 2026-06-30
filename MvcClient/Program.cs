@@ -1,45 +1,40 @@
-// Builder principal de la aplicación MVC.
 var builder = WebApplication.CreateBuilder(args);
 
-// Registramos soporte MVC con controladores y vistas.
 builder.Services.AddControllersWithViews();
 
-// Registramos HttpClient para consumir el API desde el servidor MVC.
+builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddHttpClient();
 
-// Registramos sesión para guardar temporalmente el SessionToken del OTP.
-builder.Services.AddSession();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(60);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
 
-// Construimos la aplicación con todos los servicios ya registrados.
 var app = builder.Build();
 
-// Si NO estamos en desarrollo, activamos manejo de errores y HSTS.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-// Fuerza redirección a HTTPS.
-app.UseHttpsRedirection();
+// Comentado para evitar problemas usando http://localhost:5045
+// app.UseHttpsRedirection();
 
-// Activa enrutamiento.
+app.UseStaticFiles();
+
 app.UseRouting();
 
-// Activa la sesión.
 app.UseSession();
 
-// Activa middleware de autorización.
 app.UseAuthorization();
 
-// Mapea archivos estáticos.
-app.MapStaticAssets();
-
-// Ruta por defecto de la app MVC.
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
-// Inicia la aplicación.
 app.Run();

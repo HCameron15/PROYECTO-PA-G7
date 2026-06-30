@@ -181,8 +181,8 @@ public class AuthRepository(
     }
 
     public async Task<ApiOperationResultDto<ForgotPasswordResponseDto>> ForgotPasswordAsync(
-    ForgotPasswordRequestDto resource,
-    CancellationToken cancellationToken = default)
+     ForgotPasswordRequestDto resource,
+     CancellationToken cancellationToken = default)
     {
         var result = new ApiOperationResultDto<ForgotPasswordResponseDto>();
 
@@ -229,9 +229,14 @@ public class AuthRepository(
 
         await context.PasswordResetRequests.AddAsync(passwordResetRequest, cancellationToken);
 
-        var emailSent = await emailService.SendOtpAsync(
+        var mvcBaseUrl = configuration["MvcClient:BaseUrl"];
+
+        var resetLink = $"{mvcBaseUrl}/Auth/ResetPassword?sessionToken={passwordResetRequest.SessionToken}";
+
+        var emailSent = await emailService.SendPasswordResetOtpAsync(
             user.Email,
             code,
+            resetLink,
             cancellationToken);
 
         if (!emailSent)
@@ -251,6 +256,15 @@ public class AuthRepository(
 
         return result;
     }
+
+
+
+
+
+
+
+
+
 
     public async Task<ApiOperationResultDto<object>> ResetPasswordAsync(
     ResetPasswordRequestDto resource,

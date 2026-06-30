@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Uam.AdvancedProgramming.MvcClient.Models;
 
 public class ApiResponse<T>
@@ -204,4 +206,35 @@ public class EquipmentUpsertDto
     public string Status { get; set; } = string.Empty;
 
     public DateOnly? PurchaseDate { get; set; }
+}
+
+public class ForgotPasswordRequestDto
+{
+    [Required(ErrorMessage = "El correo es requerido.")]
+    [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordRequestDto
+{
+    public string SessionToken { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public class ChangePasswordRequestDto
+{
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public class SessionDto
+{
+    public int Id { get; set; }
+    public int RefreshTokenId { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime ExpiresAtUtc { get; set; }
+    public string? RevokedReason { get; set; }
 }

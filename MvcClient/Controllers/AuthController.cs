@@ -8,9 +8,6 @@ namespace Uam.AdvancedProgramming.MvcClient.Controllers;
 
 public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration configuration) : Controller
 {
-    /// <summary>
-    /// 
-    /// </summary>
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -67,6 +64,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     }
 
     [HttpPost]
+    [HttpPost]
     public async Task<IActionResult> VerifyOtp(VerifyOtpRequestDto dto, CancellationToken cancellationToken)
     {
         var sessionToken = HttpContext.Session.GetString("OtpSessionToken");
@@ -114,6 +112,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
             HttpOnly = true,
             Secure = false,
             SameSite = SameSiteMode.Lax,
+            Path = "/",
             Expires = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
         });
 
@@ -122,12 +121,220 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
             HttpOnly = true,
             Secure = false,
             SameSite = SameSiteMode.Lax,
+            Path = "/",
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
+
+        HttpContext.Session.SetString("AccessToken", apiResult.Result.AccessToken);
+        HttpContext.Session.SetString("RefreshToken", apiResult.Result.RefreshToken);
 
         HttpContext.Session.Remove("OtpSessionToken");
 
         return RedirectToAction("Index", "Maintenance");
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto dto, CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ForgotPasswordEndpoint"]}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(dto),
+                Encoding.UTF8,
+                MediaTypeHeaderValue.Parse("application/json"))
+        };
+
+        await client.SendAsync(request, cancellationToken);
+
+        ViewBag.Message = "Si el correo está registrado, se enviarán instrucciones de recuperación.";
+
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string sessionToken)
+    {
+        var model = new ResetPasswordRequestDto
+        {
+            SessionToken = sessionToken
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto, CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ResetPasswordEndpoint"]}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(dto),
+                Encoding.UTF8,
+                MediaTypeHeaderValue.Parse("application/json"))
+        };
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var apiResult = JsonSerializer.Deserialize<ApiResponse<object>>(content, JsonOptions);
+
+        if (!response.IsSuccessStatusCode || apiResult is null || !apiResult.Success)
+        {
+            ViewBag.Error = apiResult?.Message ?? "El código OTP es inválido, vencido o ya fue usado.";
+            return View(dto);
+        }
+
+        TempData["Success"] = apiResult.Message ?? "Contraseña restablecida correctamente.";
+
+        return RedirectToAction("Login", "Auth");
+    }
+
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(Request.Cookies["AccessToken"]))
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequestDto dto, CancellationToken cancellationToken)
+    {
+        var accessToken = Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ChangePasswordEndpoint"]}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(dto),
+                Encoding.UTF8,
+                MediaTypeHeaderValue.Parse("application/json"))
+        };
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var apiResult = JsonSerializer.Deserialize<ApiResponse<object>>(content, JsonOptions);
+
+        if (!response.IsSuccessStatusCode || apiResult is null || !apiResult.Success)
+        {
+            ViewBag.Error = apiResult?.Message ?? "No se pudo cambiar la contraseña.";
+            return View(dto);
+        }
+
+        Response.Cookies.Delete("AccessToken");
+        Response.Cookies.Delete("RefreshToken");
+        HttpContext.Session.Clear();
+
+        TempData["Success"] = apiResult.Message ?? "Contraseña cambiada correctamente. Inicie sesión nuevamente.";
+
+        return RedirectToAction("Login", "Auth");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MySessions(CancellationToken cancellationToken)
+    {
+        var accessToken = Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:MySessionsEndpoint"]}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var apiResult = JsonSerializer.Deserialize<ApiResponse<List<SessionDto>>>(content, JsonOptions);
+
+        if (!response.IsSuccessStatusCode || apiResult is null || !apiResult.Success)
+        {
+            ViewBag.Error = apiResult?.Message ?? "No se pudieron cargar las sesiones.";
+            return View(new List<SessionDto>());
+        }
+
+        return View(apiResult.Result ?? new List<SessionDto>());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RevokeSession(int refreshTokenId, CancellationToken cancellationToken)
+    {
+        var accessToken = Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:RevokeSessionEndpoint"]}/{refreshTokenId}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        await client.SendAsync(request, cancellationToken);
+
+        return RedirectToAction("MySessions", "Auth");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RevokeAllSessions(CancellationToken cancellationToken)
+    {
+        var accessToken = Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var client = httpClientFactory.CreateClient();
+
+        var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:RevokeAllSessionsEndpoint"]}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        await client.SendAsync(request, cancellationToken);
+
+        Response.Cookies.Delete("AccessToken");
+        Response.Cookies.Delete("RefreshToken");
+        HttpContext.Session.Clear();
+
+        return RedirectToAction("Login", "Auth");
     }
 
     [HttpPost]
