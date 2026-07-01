@@ -23,15 +23,11 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     public async Task<IActionResult> Login(LoginRequestDto dto, CancellationToken cancellationToken)
     {
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:LoginEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
-            Content = new StringContent(
-                JsonSerializer.Serialize(dto),
-                Encoding.UTF8,
-                MediaTypeHeaderValue.Parse("application/json"))
+            Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
         };
 
         using var response = await client.SendAsync(request, cancellationToken);
@@ -46,7 +42,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         HttpContext.Session.SetString("OtpSessionToken", apiResult.Result.SessionToken);
-
         return RedirectToAction("VerifyOtp", "Auth");
     }
 
@@ -64,7 +59,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     }
 
     [HttpPost]
-    [HttpPost]
     public async Task<IActionResult> VerifyOtp(VerifyOtpRequestDto dto, CancellationToken cancellationToken)
     {
         var sessionToken = HttpContext.Session.GetString("OtpSessionToken");
@@ -75,7 +69,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:VerifyOtpEndpoint"]}";
 
         var payload = new VerifyOtpApiRequestDto
@@ -86,10 +79,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
-            Content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                MediaTypeHeaderValue.Parse("application/json"))
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
         };
 
         using var response = await client.SendAsync(request, cancellationToken);
@@ -103,9 +93,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
             return View(dto);
         }
 
-        var expiresIn = apiResult.Result.ExpiresIn > 0
-            ? apiResult.Result.ExpiresIn
-            : 1800;
+        var expiresIn = apiResult.Result.ExpiresIn > 0 ? apiResult.Result.ExpiresIn : 1800;
 
         Response.Cookies.Append("AccessToken", apiResult.Result.AccessToken, new CookieOptions
         {
@@ -127,7 +115,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
 
         HttpContext.Session.SetString("AccessToken", apiResult.Result.AccessToken);
         HttpContext.Session.SetString("RefreshToken", apiResult.Result.RefreshToken);
-
         HttpContext.Session.Remove("OtpSessionToken");
 
         return RedirectToAction("Index", "Maintenance");
@@ -143,48 +130,65 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto dto, CancellationToken cancellationToken)
     {
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ForgotPasswordEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
-            Content = new StringContent(
-                JsonSerializer.Serialize(dto),
-                Encoding.UTF8,
-                MediaTypeHeaderValue.Parse("application/json"))
+            Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
         };
 
-        await client.SendAsync(request, cancellationToken);
+        using var response = await client.SendAsync(request, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        ViewBag.Message = "Si el correo está registrado, se enviarán instrucciones de recuperación.";
+        var apiResult = JsonSerializer.Deserialize<ApiResponse<ForgotPasswordResponseDto>>(content, JsonOptions);
 
-        return View();
+        ViewBag.Message = apiResult?.Message ?? "Si el correo está registrado, se enviarán instrucciones de recuperación.";
+
+        if (response.IsSuccessStatusCode &&
+            apiResult?.Success == true &&
+            !string.IsNullOrWhiteSpace(apiResult.Result?.SessionToken))
+        {
+            HttpContext.Session.SetString("PasswordResetSessionToken", apiResult.Result.SessionToken);
+            return RedirectToAction("ResetPassword", "Auth");
+        }
+
+        return View(dto);
     }
 
     [HttpGet]
-    public IActionResult ResetPassword(string sessionToken)
+    public IActionResult ResetPassword()
     {
-        var model = new ResetPasswordRequestDto
+        var sessionToken = HttpContext.Session.GetString("PasswordResetSessionToken");
+
+        if (string.IsNullOrWhiteSpace(sessionToken))
+        {
+            return RedirectToAction("ForgotPassword", "Auth");
+        }
+
+        return View(new ResetPasswordRequestDto
         {
             SessionToken = sessionToken
-        };
-
-        return View(model);
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto, CancellationToken cancellationToken)
     {
-        var client = httpClientFactory.CreateClient();
+        var sessionToken = HttpContext.Session.GetString("PasswordResetSessionToken");
 
+        if (string.IsNullOrWhiteSpace(sessionToken))
+        {
+            return RedirectToAction("ForgotPassword", "Auth");
+        }
+
+        dto.SessionToken = sessionToken;
+
+        var client = httpClientFactory.CreateClient();
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ResetPasswordEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
-            Content = new StringContent(
-                JsonSerializer.Serialize(dto),
-                Encoding.UTF8,
-                MediaTypeHeaderValue.Parse("application/json"))
+            Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
         };
 
         using var response = await client.SendAsync(request, cancellationToken);
@@ -198,6 +202,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
             return View(dto);
         }
 
+        HttpContext.Session.Remove("PasswordResetSessionToken");
         TempData["Success"] = apiResult.Message ?? "Contraseña restablecida correctamente.";
 
         return RedirectToAction("Login", "Auth");
@@ -206,7 +211,9 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     [HttpGet]
     public IActionResult ChangePassword()
     {
-        if (string.IsNullOrWhiteSpace(Request.Cookies["AccessToken"]))
+        var accessToken = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
+
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return RedirectToAction("Login", "Auth");
         }
@@ -217,7 +224,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     [HttpPost]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequestDto dto, CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["AccessToken"];
+        var accessToken = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -225,15 +232,11 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:ChangePasswordEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
-            Content = new StringContent(
-                JsonSerializer.Serialize(dto),
-                Encoding.UTF8,
-                MediaTypeHeaderValue.Parse("application/json"))
+            Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
         };
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -254,14 +257,13 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         HttpContext.Session.Clear();
 
         TempData["Success"] = apiResult.Message ?? "Contraseña cambiada correctamente. Inicie sesión nuevamente.";
-
         return RedirectToAction("Login", "Auth");
     }
 
     [HttpGet]
     public async Task<IActionResult> MySessions(CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["AccessToken"];
+        var accessToken = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -269,7 +271,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:MySessionsEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
@@ -292,7 +293,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     [HttpPost]
     public async Task<IActionResult> RevokeSession(int refreshTokenId, CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["AccessToken"];
+        var accessToken = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -300,7 +301,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:RevokeSessionEndpoint"]}/{refreshTokenId}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
@@ -314,7 +314,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     [HttpPost]
     public async Task<IActionResult> RevokeAllSessions(CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["AccessToken"];
+        var accessToken = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -322,7 +322,6 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
         }
 
         var client = httpClientFactory.CreateClient();
-
         var endpoint = $"{configuration["ApiSettings:BaseUrl"]}{configuration["ApiSettings:RevokeAllSessionsEndpoint"]}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
@@ -340,12 +339,11 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
     [HttpPost]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var refreshToken = Request.Cookies["RefreshToken"];
+        var refreshToken = HttpContext.Session.GetString("RefreshToken") ?? Request.Cookies["RefreshToken"];
 
         if (!string.IsNullOrWhiteSpace(refreshToken))
         {
             var client = httpClientFactory.CreateClient();
-
             var endpoint = $"{configuration["ApiSettings:BaseUrl"]}/api/Auth/Logout";
 
             var payload = new LogoutRequestDto
@@ -355,10 +353,7 @@ public class AuthController(IHttpClientFactory httpClientFactory, IConfiguration
 
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
-                Content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    MediaTypeHeaderValue.Parse("application/json"))
+                Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"))
             };
 
             await client.SendAsync(request, cancellationToken);

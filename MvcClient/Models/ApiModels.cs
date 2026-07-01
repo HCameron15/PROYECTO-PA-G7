@@ -238,3 +238,8 @@ public class SessionDto
     public DateTime ExpiresAtUtc { get; set; }
     public string? RevokedReason { get; set; }
 }
+public class ForgotPasswordResponseDto
+{
+    public string Message { get; set; } = string.Empty;
+    public string? SessionToken { get; set; }
+}
