@@ -1,6 +1,7 @@
 ﻿using Uam.AdvancedProgramming.Api.Data;
 using Uam.AdvancedProgramming.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Uam.AdvancedProgramming.Api.Constants;
 
 namespace Uam.AdvancedProgramming.Api.Data.Seed;
 

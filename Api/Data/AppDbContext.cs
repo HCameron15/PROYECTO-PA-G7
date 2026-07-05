@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Uam.AdvancedProgramming.Api.Models;
+using Uam.AdvancedProgramming.Api.Constants;
 
 namespace Uam.AdvancedProgramming.Api.Data;
 
@@ -43,6 +44,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PendingLoginSession> PendingLoginSessions => Set<PendingLoginSession>();
 
     public DbSet<PasswordResetRequest> PasswordResetRequests => Set<PasswordResetRequest>();
+
+    public DbSet<FaultReport> FaultReports => Set<FaultReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -183,6 +186,61 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasOne(x => x.Laboratory)
                 .WithMany(x => x.Equipment)
                 .HasForeignKey(x => x.LaboratoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<FaultReport>(entity =>
+        {
+            entity.ToTable("FaultReports");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.EquipmentId)
+                .IsRequired();
+
+            entity.Property(x => x.ReportedByUserId)
+                .IsRequired();
+
+            entity.Property(x => x.Title)
+                .HasMaxLength(150)
+                .IsRequired();
+
+            entity.Property(x => x.Description)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            entity.Property(x => x.Priority)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(x => x.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue(FaultReportStatuses.Pending)
+                .IsRequired();
+
+            entity.Property(x => x.ReportedAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.CreatedAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.UpdatedAtUtc)
+                .IsRequired();
+
+            entity.HasIndex(x => x.Status);
+
+            entity.HasIndex(x => x.EquipmentId);
+
+            entity.HasIndex(x => x.ReportedByUserId);
+
+            entity.HasOne(x => x.Equipment)
+                .WithMany(x => x.FaultReports)
+                .HasForeignKey(x => x.EquipmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ReportedByUser)
+                .WithMany(x => x.FaultReportsReported)
+                .HasForeignKey(x => x.ReportedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

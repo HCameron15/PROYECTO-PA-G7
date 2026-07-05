@@ -42,4 +42,6 @@ public class Equipment
     public DateTime UpdatedAtUtc { get; set; }
 
     public Laboratory? Laboratory { get; set; }
+
+    public ICollection<FaultReport> FaultReports { get; set; } = [];
 }

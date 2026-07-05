@@ -14,5 +14,7 @@ public interface IUnitOfWork
 
     IAuthRepository Auth { get; }
 
+    IFaultReportRepository FaultReports { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

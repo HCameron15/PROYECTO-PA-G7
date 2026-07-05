@@ -27,6 +27,8 @@
         public ICollection<PendingLoginSession> PendingLoginSessions { get; set; } = [];
 
         public ICollection<PasswordResetRequest> PasswordResetRequests { get; set; } = [];
+
+        public ICollection<FaultReport> FaultReportsReported { get; set; } = [];
     }
 
 }
