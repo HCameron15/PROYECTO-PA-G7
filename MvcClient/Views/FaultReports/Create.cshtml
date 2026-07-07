@@ -1,0 +1,93 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Uam.AdvancedProgramming.MvcClient.Models.FaultReports.CreateFaultReportViewModel
+
+@{
+    ViewData["Title"] = "Nuevo Reporte";
+}
+
+<h2>Nuevo Reporte de Avería</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.Error
+    </div>
+}
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label asp-for="EquipmentId" class="form-label"></label>
+
+        <select asp-for="EquipmentId"
+                asp-items="Model.EquipmentOptions"
+                class="form-select">
+
+            <option value="">Seleccione un equipo...</option>
+
+        </select>
+
+        <span asp-validation-for="EquipmentId"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+
+        <input asp-for="Title"
+               class="form-control" />
+
+        <span asp-validation-for="Title"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description"
+               class="form-label"></label>
+
+        <textarea asp-for="Description"
+                  class="form-control"
+                  rows="5"></textarea>
+
+        <span asp-validation-for="Description"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Priority"
+               class="form-label"></label>
+
+        <select asp-for="Priority"
+                asp-items="Model.PriorityOptions"
+                class="form-select">
+
+            <option value="">Seleccione...</option>
+
+        </select>
+
+        <span asp-validation-for="Priority"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Guardar
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

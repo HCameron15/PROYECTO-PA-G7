@@ -29,6 +29,9 @@
         public ICollection<PasswordResetRequest> PasswordResetRequests { get; set; } = [];
 
         public ICollection<FaultReport> FaultReportsReported { get; set; } = [];
-    }
 
+        public ICollection<FaultReport> AssignedFaultReports { get; set; } = [];
+
+        public ICollection<FaultReportStatusLog> FaultReportStatusLogs { get; set; } = [];
+    }
 }

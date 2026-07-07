@@ -1,0 +1,75 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Uam.AdvancedProgramming.MvcClient.Models.FaultReports.UpdateFaultReportStatusViewModel
+
+@{
+    ViewData["Title"] = "Actualizar estado";
+}
+
+<h2>Actualizar estado del reporte</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.Error
+    </div>
+}
+
+<form asp-action="UpdateStatus" method="post">
+
+    <input asp-for="FaultReportId" type="hidden" />
+
+    <div class="mb-3">
+        <label class="form-label">Estado actual</label>
+        <input class="form-control" value="@Model.CurrentStatus" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="NewStatus" class="form-label"></label>
+
+        <select asp-for="NewStatus" class="form-select">
+            <option value="">Seleccione...</option>
+
+            @foreach (var status in Model.ValidStatuses)
+            {
+                <option value="@status">@status</option>
+            }
+
+        </select>
+
+        <span asp-validation-for="NewStatus" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Notes" class="form-label"></label>
+
+        <textarea asp-for="Notes"
+                  class="form-control"
+                  rows="4"></textarea>
+
+        <span asp-validation-for="Notes"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Guardar cambios
+    </button>
+
+    <a asp-action="Details"
+       asp-route-id="@Model.FaultReportId"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

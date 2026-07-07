@@ -47,6 +47,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<FaultReport> FaultReports => Set<FaultReport>();
 
+    public DbSet<FaultReportStatusLog> FaultReportStatusLogs => Set<FaultReportStatusLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<PasswordResetRequest>(entity =>
@@ -201,6 +203,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.ReportedByUserId)
                 .IsRequired();
 
+            entity.Property(x => x.AssignedTechnicianId)
+                .IsRequired(false);
+
             entity.Property(x => x.Title)
                 .HasMaxLength(150)
                 .IsRequired();
@@ -228,10 +233,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .IsRequired();
 
             entity.HasIndex(x => x.Status);
-
             entity.HasIndex(x => x.EquipmentId);
-
             entity.HasIndex(x => x.ReportedByUserId);
+            entity.HasIndex(x => x.AssignedTechnicianId);
 
             entity.HasOne(x => x.Equipment)
                 .WithMany(x => x.FaultReports)
@@ -241,6 +245,53 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasOne(x => x.ReportedByUser)
                 .WithMany(x => x.FaultReportsReported)
                 .HasForeignKey(x => x.ReportedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.AssignedTechnician)
+                .WithMany(x => x.AssignedFaultReports)
+                .HasForeignKey(x => x.AssignedTechnicianId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<FaultReportStatusLog>(entity =>
+        {
+            entity.ToTable("FaultReportStatusLogs");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.FaultReportId)
+                .IsRequired();
+
+            entity.Property(x => x.ChangedByUserId)
+                .IsRequired();
+
+            entity.Property(x => x.PreviousStatus)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(x => x.NewStatus)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(x => x.Notes)
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            entity.Property(x => x.ChangedAtUtc)
+                .IsRequired();
+
+            entity.HasIndex(x => x.FaultReportId);
+            entity.HasIndex(x => x.ChangedByUserId);
+            entity.HasIndex(x => x.ChangedAtUtc);
+
+            entity.HasOne(x => x.FaultReport)
+                .WithMany(x => x.StatusLogs)
+                .HasForeignKey(x => x.FaultReportId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ChangedByUser)
+                .WithMany(x => x.FaultReportStatusLogs)
+                .HasForeignKey(x => x.ChangedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

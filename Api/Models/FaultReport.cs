@@ -10,6 +10,8 @@ public class FaultReport
 
     public int ReportedByUserId { get; set; }
 
+    public int? AssignedTechnicianId { get; set; }
+
     public string Title { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
@@ -27,4 +29,8 @@ public class FaultReport
     public Equipment Equipment { get; set; } = null!;
 
     public User ReportedByUser { get; set; } = null!;
+
+    public User? AssignedTechnician { get; set; }
+
+    public ICollection<FaultReportStatusLog> StatusLogs { get; set; } = [];
 }

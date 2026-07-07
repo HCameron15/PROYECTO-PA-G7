@@ -37,4 +37,15 @@ public interface IFaultReportRepository
     Task<ApiOperationResultDto<FaultReportDto>> CloseFaultReportAsync(
         int id,
         CancellationToken cancellationToken = default);
+
+    Task<ApiOperationResultDto<FaultReportDto>> AssignFaultReportAsync(
+        int id,
+        int technicianUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiOperationResultDto<FaultReportDto>> UpdateFaultReportStatusAsync(
+        int id,
+        int changedByUserId,
+        UpdateFaultReportStatusDto resource,
+        CancellationToken cancellationToken = default);
 }

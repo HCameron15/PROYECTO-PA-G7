@@ -177,6 +177,79 @@ public class FaultReportsController(
             : BadRequest(result);
     }
 
+
+    [HttpPost(nameof(AssignFaultReport) + "/{id:int}")]
+    public async Task<IActionResult> AssignFaultReport(
+    int id,
+    CancellationToken cancellationToken)
+    {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized(CreateUnauthorizedResult());
+        }
+
+        var result = await unitOfWork.FaultReports
+            .AssignFaultReportAsync(
+                id,
+                userId.Value,
+                cancellationToken);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return result.Code switch
+        {
+            "401" => Unauthorized(result),
+            "403" => StatusCode(StatusCodes.Status403Forbidden, result),
+            "404" => NotFound(result),
+            _ => BadRequest(result)
+        };
+    }
+
+    [HttpPut(nameof(UpdateFaultReportStatus) + "/{id:int}")]
+    public async Task<IActionResult> UpdateFaultReportStatus(
+        int id,
+        [FromBody] UpdateFaultReportStatusDto resource,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(CreateInvalidModelResult());
+        }
+
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized(CreateUnauthorizedResult());
+        }
+
+        var result = await unitOfWork.FaultReports
+            .UpdateFaultReportStatusAsync(
+                id,
+                userId.Value,
+                resource,
+                cancellationToken);
+
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return result.Code switch
+        {
+            "401" => Unauthorized(result),
+            "403" => StatusCode(StatusCodes.Status403Forbidden, result),
+            "404" => NotFound(result),
+            _ => BadRequest(result)
+        };
+    }
+
+
     private int? GetAuthenticatedUserId()
     {
         var userIdValue = User.FindFirstValue("UserId");

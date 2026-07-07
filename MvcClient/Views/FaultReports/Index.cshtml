@@ -1,0 +1,201 @@
+﻿@model List<Uam.AdvancedProgramming.MvcClient.Models.FaultReports.FaultReportDto>
+
+@{
+    ViewData["Title"] = "Reportes de Averías";
+}
+
+<h2>Reportes de Averías</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.Error
+    </div>
+}
+
+<div class="row mb-3">
+
+    <div class="col-md-3">
+        <a asp-action="Create"
+           class="btn btn-success">
+            <i class="fas fa-plus"></i>
+            Nuevo Reporte
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <form asp-action="Index" method="get">
+
+            <select name="status"
+                    class="form-select">
+
+                <option value="">Todos</option>
+                <option value="Pending">Pending</option>
+                <option value="InProgress">InProgress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+
+            </select>
+
+            <button class="btn btn-primary mt-2">
+                Filtrar
+            </button>
+
+        </form>
+    </div>
+
+</div>
+
+<table class="table table-bordered table-hover">
+
+    <thead>
+
+        <tr>
+
+            <th>ID</th>
+
+            <th>Título</th>
+
+            <th>Equipo</th>
+
+            <th>Laboratorio</th>
+
+            <th>Prioridad</th>
+
+            <th>Estado</th>
+
+            <th>Técnico</th>
+
+            <th>Reportado por</th>
+
+            <th>Fecha</th>
+
+            <th width="350">Acciones</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        @if (!Model.Any())
+        {
+            <tr>
+
+                <td colspan="10"
+                    class="text-center">
+
+                    No hay reportes registrados.
+
+                </td>
+
+            </tr>
+        }
+
+        else
+        {
+            foreach (var item in Model)
+            {
+                <tr>
+
+                    <td>@item.Id</td>
+
+                    <td>@item.Title</td>
+
+                    <td>@item.EquipmentCode</td>
+
+                    <td>@item.LaboratoryName</td>
+
+                    <td>@item.Priority</td>
+
+                    <td>@item.Status</td>
+
+                    <td>
+
+                        @(string.IsNullOrWhiteSpace(item.AssignedTechnicianName)
+                            ? "Sin asignar"
+                            : item.AssignedTechnicianName)
+
+                    </td>
+
+                    <td>@item.ReportedByName</td>
+
+                    <td>@item.ReportedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+
+                    <td>
+
+                        <a asp-action="Details"
+                           asp-route-id="@item.Id"
+                           class="btn btn-info btn-sm">
+
+                            Detalle
+
+                        </a>
+
+                        <a asp-action="Edit"
+                           asp-route-id="@item.Id"
+                           class="btn btn-warning btn-sm">
+
+                            Editar
+
+                        </a>
+
+                        @if (item.Status == "Resolved")
+                        {
+                            <form asp-action="Close"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  style="display:inline;">
+
+                                <button class="btn btn-dark btn-sm">
+
+                                    Cerrar
+
+                                </button>
+
+                            </form>
+                        }
+
+                        @if (item.Status == "Pending")
+                        {
+                            <form asp-action="Assign"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  style="display:inline;">
+
+                                <button class="btn btn-primary btn-sm">
+
+                                    Asignar
+
+                                </button>
+
+                            </form>
+                        }
+
+                        @if (item.Status == "InProgress")
+                        {
+                            <a asp-action="UpdateStatus"
+                               asp-route-id="@item.Id"
+                               class="btn btn-success btn-sm">
+
+                                Actualizar Estado
+
+                            </a>
+                        }
+
+                    </td>
+
+                </tr>
+            }
+        }
+
+    </tbody>
+
+</table>

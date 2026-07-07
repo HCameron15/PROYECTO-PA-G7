@@ -1,0 +1,71 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Uam.AdvancedProgramming.MvcClient.Models.FaultReports.FaultReportDetailsViewModel
+
+@{
+    ViewData["Title"] = "Detalle del reporte";
+}
+
+<h2>Detalle del reporte</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p><strong>ID:</strong> @Model.Report.Id</p>
+        <p><strong>Título:</strong> @Model.Report.Title</p>
+        <p><strong>Descripción:</strong> @Model.Report.Description</p>
+        <p><strong>Equipo:</strong> @Model.Report.EquipmentCode</p>
+        <p><strong>Laboratorio:</strong> @Model.Report.LaboratoryName</p>
+        <p><strong>Prioridad:</strong> @Model.Report.Priority</p>
+        <p><strong>Estado:</strong> @Model.Report.Status</p>
+        <p><strong>Reportado por:</strong> @Model.Report.ReportedByName</p>
+        <p><strong>Técnico asignado:</strong> @(string.IsNullOrWhiteSpace(Model.Report.AssignedTechnicianName) ? "Sin asignar" : Model.Report.AssignedTechnicianName)</p>
+        <p><strong>Fecha:</strong> @Model.Report.ReportedAtUtc.ToString("yyyy-MM-dd HH:mm")</p>
+    </div>
+</div>
+
+<h4>Historial de cambios de estado</h4>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Estado anterior</th>
+            <th>Estado nuevo</th>
+            <th>Cambiado por</th>
+            <th>Notas</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Logs.Count == 0)
+        {
+            <tr>
+                <td colspan="5">No hay historial registrado.</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var log in Model.Logs)
+            {
+                <tr>
+                    <td>@log.ChangedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@log.PreviousStatus</td>
+                    <td>@log.NewStatus</td>
+                    <td>@log.ChangedByName</td>
+                    <td>@log.Notes</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-secondary" asp-action="Index">Volver</a>
+
+@if (Model.Report.Status == "InProgress")
+{
+    <a class="btn btn-success" asp-action="UpdateStatus" asp-route-id="@Model.Report.Id">
+        Actualizar estado
+    </a>
+}
