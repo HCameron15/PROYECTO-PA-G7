@@ -5,7 +5,6 @@ using MimeKit;
 using Uam.AdvancedProgramming.Api.Interfaces;
 using Uam.AdvancedProgramming.Api.Models.Configurations;
 
-
 namespace Uam.AdvancedProgramming.Api.Services;
 
 public class EmailService(
@@ -37,15 +36,27 @@ public class EmailService(
 
             using var client = new SmtpClient();
 
-            await client.ConnectAsync(_smtpSettings.Host, _smtpSettings.Port, SecureSocketOptions.StartTls, cancellationToken);
-            await client.AuthenticateAsync(_smtpSettings.SenderEmail, _smtpSettings.Password, cancellationToken);
+            await client.ConnectAsync(
+                _smtpSettings.Host,
+                _smtpSettings.Port,
+                SecureSocketOptions.StartTls,
+                cancellationToken);
+
+            await client.AuthenticateAsync(
+                _smtpSettings.SenderEmail,
+                _smtpSettings.Password,
+                cancellationToken);
+
             await client.SendAsync(message, cancellationToken);
+
             await client.DisconnectAsync(true, cancellationToken);
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine("ERROR ENVIANDO OTP:");
+            Console.WriteLine(ex.ToString());
             return false;
         }
     }
@@ -77,15 +88,27 @@ public class EmailService(
 
             using var client = new SmtpClient();
 
-            await client.ConnectAsync(_smtpSettings.Host, _smtpSettings.Port, SecureSocketOptions.StartTls, cancellationToken);
-            await client.AuthenticateAsync(_smtpSettings.SenderEmail, _smtpSettings.Password, cancellationToken);
+            await client.ConnectAsync(
+                _smtpSettings.Host,
+                _smtpSettings.Port,
+                SecureSocketOptions.StartTls,
+                cancellationToken);
+
+            await client.AuthenticateAsync(
+                _smtpSettings.SenderEmail,
+                _smtpSettings.Password,
+                cancellationToken);
+
             await client.SendAsync(message, cancellationToken);
+
             await client.DisconnectAsync(true, cancellationToken);
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine("ERROR ENVIANDO RECUPERACION DE CONTRASEÑA:");
+            Console.WriteLine(ex.ToString());
             return false;
         }
     }
