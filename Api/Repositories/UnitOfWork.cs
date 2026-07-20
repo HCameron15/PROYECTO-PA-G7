@@ -16,7 +16,9 @@ public class UnitOfWork(
     IStringLocalizer<AuthRepository> authLocalizer,
     IStringLocalizer<FaultReportRepository> faultReportLocalizer,
     IStringLocalizer<FaultReportStatusLogRepository> faultReportStatusLogLocalizer,
-    IEmailService emailService
+    IStringLocalizer<DashboardRepository> dashboardLocalizer,
+    IEmailService emailService,
+    IEmailNotificationService emailNotificationService
 ) : IUnitOfWork
 {
     private IStudentRepository? _students;
@@ -27,6 +29,7 @@ public class UnitOfWork(
     private IAuthRepository? _auth;
     private IFaultReportRepository? _faultReports;
     private IFaultReportStatusLogRepository? _faultReportStatusLogs;
+    private IDashboardRepository? _dashboard;
 
     public IStudentRepository Students =>
         _students ??= new StudentRepository(
@@ -63,12 +66,18 @@ public class UnitOfWork(
     public IFaultReportRepository FaultReports =>
         _faultReports ??= new FaultReportRepository(
             context,
-            faultReportLocalizer);
+            faultReportLocalizer,
+            emailNotificationService);
 
     public IFaultReportStatusLogRepository FaultReportStatusLogs =>
         _faultReportStatusLogs ??= new FaultReportStatusLogRepository(
             context,
             faultReportStatusLogLocalizer);
+
+    public IDashboardRepository Dashboard =>
+        _dashboard ??= new DashboardRepository(
+            context,
+            dashboardLocalizer);
 
     public Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default) =>

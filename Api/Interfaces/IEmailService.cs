@@ -2,6 +2,12 @@
 
 public interface IEmailService
 {
+    Task<bool> SendEmailAsync(
+        string toEmail,
+        string subject,
+        string body,
+        CancellationToken cancellationToken = default);
+
     Task<bool> SendOtpAsync(
         string toEmail,
         string otpCode,
