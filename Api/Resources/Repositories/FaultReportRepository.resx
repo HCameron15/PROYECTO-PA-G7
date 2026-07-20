@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="OperationSuccessful" xml:space="preserve"><value>Operación realizada correctamente.</value></data>
+  <data name="FaultReportNotFound" xml:space="preserve"><value>El reporte de avería no fue encontrado.</value></data>
+  <data name="FaultReportsNotFound" xml:space="preserve"><value>No se encontraron reportes de averías.</value></data>
+  <data name="InvalidFaultReportStatus" xml:space="preserve"><value>El estado del reporte de avería no es válido.</value></data>
+  <data name="UserNotAvailable" xml:space="preserve"><value>El usuario no existe o está inactivo.</value></data>
+  <data name="InstructorRoleRequired" xml:space="preserve"><value>Solo los usuarios con rol Instructor pueden crear reportes de averías.</value></data>
+  <data name="InvalidFaultReportPriority" xml:space="preserve"><value>La prioridad del reporte de avería no es válida.</value></data>
+  <data name="EquipmentNotFound" xml:space="preserve"><value>El equipo no existe o está inactivo.</value></data>
+  <data name="EquipmentNotOperational" xml:space="preserve"><value>Solo se pueden reportar averías en equipos con estado Operational.</value></data>
+  <data name="FaultReportCreatedSuccessfully" xml:space="preserve"><value>Reporte de avería creado correctamente.</value></data>
+  <data name="ClosedFaultReportCannotBeModified" xml:space="preserve"><value>Un reporte cerrado no puede modificarse.</value></data>
+  <data name="UseCloseFaultReportEndpoint" xml:space="preserve"><value>Para cerrar el reporte debe utilizar la operación CloseFaultReport.</value></data>
+  <data name="FaultReportUpdatedSuccessfully" xml:space="preserve"><value>Reporte de avería actualizado correctamente.</value></data>
+  <data name="FaultReportAlreadyClosed" xml:space="preserve"><value>El reporte de avería ya está cerrado.</value></data>
+  <data name="FaultReportMustBeResolved" xml:space="preserve"><value>El reporte debe estar en estado Resolved antes de cerrarse.</value></data>
+  <data name="FaultReportClosedSuccessfully" xml:space="preserve"><value>Reporte de avería cerrado correctamente.</value></data>
+  <data name="TechnicianRoleRequired" xml:space="preserve"><value>Solo un usuario con rol Technician puede atender el reporte.</value></data>
+  <data name="InvalidFaultReportStatusTransition" xml:space="preserve"><value>La transición de estado solicitada no es válida.</value></data>
+  <data name="FaultReportAssignedSuccessfully" xml:space="preserve"><value>Reporte asignado correctamente.</value></data>
+  <data name="OnlyAssignedTechnicianCanUpdateStatus" xml:space="preserve"><value>Solo el técnico asignado puede actualizar el estado.</value></data>
+  <data name="FaultReportStatusUpdatedSuccessfully" xml:space="preserve"><value>Estado del reporte actualizado correctamente.</value></data>
+</root>

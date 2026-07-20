@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="ReportCreatedSubject" xml:space="preserve"><value>Nuevo reporte de avería: {0}</value></data>
+  <data name="ReportAssignedSubject" xml:space="preserve"><value>Reporte asignado: {0}</value></data>
+  <data name="StatusChangedSubject" xml:space="preserve"><value>Reporte {0} actualizado a {1}</value></data>
+  <data name="ReportClosedSubject" xml:space="preserve"><value>Reporte cerrado: {0}</value></data>
+  <data name="ReportNotificationBody" xml:space="preserve"><value>Reporte: {0}
+Equipo: {1}
+Laboratorio: {2}
+Estado actual: {3}
+Fecha del evento (UTC): {4:yyyy-MM-dd HH:mm:ss}</value></data>
+  <data name="NotificationSendFailedLog" xml:space="preserve"><value>No se pudo enviar la notificación del reporte {FaultReportId} al destinatario {RecipientEmail}.</value></data>
+  <data name="NotificationProcessingFailedLog" xml:space="preserve"><value>Falló el procesamiento de la notificación del reporte {FaultReportId}.</value></data>
+</root>

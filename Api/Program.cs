@@ -58,6 +58,7 @@ builder.Configuration.GetSection("Smtp"));
 
 // Registramos servicio de email para inyección de dependencias.
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
 
 // Registramos el DbContext (conexión a base de datos SQL Server).
 // La cadena de conexión se lee desde appsettings.json -> ConnectionStrings:DefaultConnection.
@@ -145,4 +146,3 @@ using (var scope = app.Services.CreateScope())
 
 // Inicia la aplicación y la deja escuchando solicitudes.
 app.Run();
-

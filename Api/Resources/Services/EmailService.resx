@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="EmailSendErrorLog" xml:space="preserve"><value>Error al enviar correo a {RecipientEmail}.</value></data>
+  <data name="OtpSubject" xml:space="preserve"><value>Código OTP - UAM Lab Help Desk</value></data>
+  <data name="OtpBody" xml:space="preserve"><value>Su código OTP es: {0}. Este código vence en 10 minutos.</value></data>
+  <data name="PasswordResetSubject" xml:space="preserve"><value>Recuperación de contraseña - UAM Lab Help Desk</value></data>
+  <data name="PasswordResetBody" xml:space="preserve"><value>Su código de recuperación es: {0}
+
+Para restablecer su contraseña, ingrese al siguiente enlace:
+{1}
+
+Este código vence en 10 minutos.</value></data>
+</root>

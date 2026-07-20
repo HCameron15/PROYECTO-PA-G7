@@ -11,7 +11,8 @@ namespace Uam.AdvancedProgramming.Api.Repositories;
 
 public class FaultReportRepository(
     AppDbContext context,
-    IStringLocalizer<FaultReportRepository> localizer)
+    IStringLocalizer<FaultReportRepository> localizer,
+    IEmailNotificationService emailNotificationService)
     : Repository<FaultReport>(context), IFaultReportRepository
 {
     public async Task<ApiOperationResultDto<List<FaultReportDto>>> GetAllFaultReportsAsync(
@@ -218,6 +219,10 @@ public class FaultReportRepository(
         var created = await GetFaultReportsQuery()
             .FirstAsync(x => x.Id == faultReport.Id, cancellationToken);
 
+        await emailNotificationService.SendReportCreatedAsync(
+            created,
+            cancellationToken);
+
         result.Success = true;
         result.Code = "201";
         result.Message = localizer["FaultReportCreatedSuccessfully"].Value;
@@ -384,6 +389,11 @@ public class FaultReportRepository(
 
         await Context.SaveChangesAsync(cancellationToken);
 
+        await emailNotificationService.SendReportAssignedAsync(
+            faultReport,
+            technician,
+            cancellationToken);
+
         result.Success = true;
         result.Code = "200";
         result.Message = localizer["FaultReportAssignedSuccessfully"].Value;
@@ -489,6 +499,14 @@ public class FaultReportRepository(
 
         await Context.SaveChangesAsync(cancellationToken);
 
+        if (newStatus == FaultReportStatuses.Resolved)
+        {
+            await emailNotificationService.SendStatusChangedAsync(
+                faultReport,
+                newStatus,
+                cancellationToken);
+        }
+
         result.Success = true;
         result.Code = "200";
         result.Message = localizer["FaultReportStatusUpdatedSuccessfully"].Value;
@@ -546,6 +564,10 @@ public class FaultReportRepository(
         Context.Equipment.Update(faultReport.Equipment);
 
         await Context.SaveChangesAsync(cancellationToken);
+
+        await emailNotificationService.SendReportClosedAsync(
+            faultReport,
+            cancellationToken);
 
         result.Success = true;
         result.Code = "200";
