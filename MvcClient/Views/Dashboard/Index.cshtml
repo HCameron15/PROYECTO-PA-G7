@@ -1,0 +1,326 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Uam.AdvancedProgramming.MvcClient.Models.Dashboard.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        <i class="fas fa-chart-bar"></i>
+        Dashboard
+    </h2>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    <div class="row">
+
+        <div class="col-md-3">
+            <div class="small-box bg-primary">
+                <div class="inner">
+                    <h3>@Model.GeneralSummary.TotalReports</h3>
+                    <p>Total Reportes</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>@Model.GeneralSummary.PendingCount</h3>
+                    <p>Pendientes</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>@Model.GeneralSummary.InProgressCount</h3>
+                    <p>En Progreso</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>@Model.GeneralSummary.ResolvedCount</h3>
+                    <p>Resueltos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="info-box bg-danger">
+                <span class="info-box-icon">
+                    <i class="fas fa-lock"></i>
+                </span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">Cerrados</span>
+                    <span class="info-box-number">
+                        @Model.GeneralSummary.ClosedCount
+                    </span>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="info-box bg-secondary">
+                <span class="info-box-icon">
+                    <i class="fas fa-desktop"></i>
+                </span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">
+                        Total Equipos
+                    </span>
+
+                    <span class="info-box-number">
+                        @Model.GeneralSummary.TotalEquipment
+                    </span>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="info-box bg-maroon">
+
+                <span class="info-box-icon">
+                    <i class="fas fa-wrench"></i>
+                </span>
+
+                <div class="info-box-content">
+
+                    <span class="info-box-text">
+                        Equipos en Reparación
+                    </span>
+
+                    <span class="info-box-number">
+                        @Model.GeneralSummary.EquipmentUnderRepair
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Reportes por Laboratorio
+            </h3>
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-bordered table-striped">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Laboratorio</th>
+                        <th>Total</th>
+                        <th>Pendientes</th>
+                        <th>En progreso</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var lab in Model.ReportsByLab)
+                    {
+                        <tr>
+
+                            <td>@lab.LabName</td>
+                            <td>@lab.TotalReports</td>
+                            <td>@lab.PendingCount</td>
+                            <td>@lab.InProgressCount</td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Carga por Técnico
+            </h3>
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-bordered">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Técnico</th>
+                        <th>Asignados</th>
+                        <th>Resueltos</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var tech in Model.ReportsByTechnician)
+                    {
+                        <tr>
+
+                            <td>@tech.FullName</td>
+                            <td>@tech.AssignedCount</td>
+                            <td>@tech.ResolvedCount</td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Reportes por Estado
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-bordered">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Estado</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model.ReportsByStatus)
+                    {
+                        <tr>
+
+                            <td>@item.Status</td>
+                            <td>@item.TotalReports</td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                Tiempo promedio de resolución
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row text-center">
+
+                <div class="col-md-4">
+
+                    <h3>@Model.AverageResolutionTime.AverageHours.ToString("N2")</h3>
+
+                    <p>Promedio (Horas)</p>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <h3>@Model.AverageResolutionTime.FastestResolutionHours.ToString("N2")</h3>
+
+                    <p>Más rápida</p>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <h3>@Model.AverageResolutionTime.SlowestResolutionHours.ToString("N2")</h3>
+
+                    <p>Más lenta</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

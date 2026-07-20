@@ -42,6 +42,9 @@ public class EmailService(
                 SecureSocketOptions.StartTls,
                 cancellationToken);
 
+            Console.WriteLine($"EMAIL: {_smtpSettings.SenderEmail}");
+            Console.WriteLine($"PASSWORD LENGTH: {_smtpSettings.Password?.Length}");
+
             await client.AuthenticateAsync(
                 _smtpSettings.SenderEmail,
                 _smtpSettings.Password,
